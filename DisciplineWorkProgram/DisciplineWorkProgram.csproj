@@ -27,4 +27,10 @@
     <PackageReference Include="Open-XML-SDK" Version="2.9.1" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="DWP_TemplateBookmarks.docx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

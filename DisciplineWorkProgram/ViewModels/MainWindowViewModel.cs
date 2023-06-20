@@ -1,14 +1,13 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
 using DisciplineWorkProgram.Models;
 using DisciplineWorkProgram.Models.Sections;
 using JetBrains.Annotations;
 using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
 using MessageBox.Avalonia.Models;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ namespace DisciplineWorkProgram.ViewModels
 {
 	public class MainWindowViewModel : INotifyPropertyChanged
 	{
-		public const string TemplatePath = "D:/Mag/DWP_TemplateBookmarks.docx";
+		public string TemplatePath = Directory.GetCurrentDirectory() + "\\DWP_TemplateBookmarks.docx";
 		public const string DwpDir = "dwp/";
 
 		public event PropertyChangedEventHandler PropertyChanged;
