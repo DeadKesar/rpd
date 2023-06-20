@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DisciplineWorkProgram.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="DisciplineWorkProgram.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="DisciplineWorkProgram">
+
+  <Grid>
+    <DockPanel>
+
+      <DockPanel DockPanel.Dock="Top">
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5, 5, 5, 0">
+          <Button Command="{Binding ChangePlanPath}" Width="300" Content="Выбрать план"  />
+          <TextBox Text="{Binding PlanPath}" Width="300" />
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5, 5, 5, 0">
+          <Button Command="{Binding ChangeCompListPath}" Width="300" Content="Выбрать список компетенций" />
+          <TextBox Text="{Binding CompListPath}" Width="300" />
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5, 5, 5, 5">
+          <Button Command="{Binding ChangeCompMatrixPath}" Width="300" Content="Выбрать матрицу компетенций" />
+          <TextBox Text="{Binding CompMatrixPath}" Width="300" />
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="5, 5, 5, 5">
+
+          <Button Command="{Binding LoadDataButton}" DockPanel.Dock="Right" Content="Загрузить данные" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
+
+          <Button Command="{Binding MakeDwps}" DockPanel.Dock="Right" Content="Сформировать шаблоны" HorizontalAlignment="Left" />
+
+        </StackPanel>
+
+      </DockPanel>
+
+      <TreeView DockPanel.Dock="Left" Items="{Binding Items}" Margin="5, 0, 5, 5">
+        <TreeView.ItemTemplate>
+          <TreeDataTemplate ItemsSource="{Binding Path=Nodes}">
+            <StackPanel Orientation="Horizontal">
+              <CheckBox Focusable="False" IsChecked="{Binding IsChecked}" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+          </TreeDataTemplate>
+        </TreeView.ItemTemplate>
+      </TreeView>
+
+    </DockPanel>
+  </Grid>
+</Window>
