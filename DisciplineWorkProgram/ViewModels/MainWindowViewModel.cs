@@ -3,6 +3,9 @@ using Avalonia.Interactivity;
 using DisciplineWorkProgram.Models;
 using DisciplineWorkProgram.Models.Sections;
 using JetBrains.Annotations;
+using MessageBox.Avalonia.DTO;
+using MessageBox.Avalonia.Enums;
+using MessageBox.Avalonia.Models;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -80,6 +83,22 @@ namespace DisciplineWorkProgram.ViewModels
 
 		public void LoadDataButton()
 		{
+			if (string.IsNullOrWhiteSpace(PlanPath) || string.IsNullOrWhiteSpace(CompListPath) || string.IsNullOrWhiteSpace(CompMatrixPath))
+			{
+				var messageBoxCustomWindow = MessageBox.Avalonia.MessageBoxManager
+				   .GetMessageBoxCustomWindow(new MessageBoxCustomParams
+				   {
+					   ContentMessage = "Выберите все документы",
+					   ButtonDefinitions = new[] {
+							new ButtonDefinition {Name = "Ok"}
+					   },
+					   WindowStartupLocation = WindowStartupLocation.CenterOwner
+				   });
+
+				messageBoxCustomWindow.Show();
+
+				return;
+			}
 			LoadData();
 			UpdateSource();
 		}
