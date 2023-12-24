@@ -15,22 +15,22 @@ namespace DisciplineWorkProgram.Models
 			var disciplines = ExcelHelpers.GetRowsWithPlus(workbook.Worksheet(WorksheetName))
 				.Select(row => new Discipline
 				{
-					Name = row.Cell("C").GetString(),
-					Department = row.Cell("AB").GetString(),
-					Exam = row.Cell("D").GetInt(),
-					Credit = row.Cell("E").GetInt(),
-					CreditWithRating = row.Cell("F").GetInt(),
-					Kp = row.Cell("G").GetInt(),
-					Kr = row.Cell("H").GetInt(),
-					Fact = row.Cell("I").GetInt(),
-					ByPlan = row.Cell("K").GetInt(),
-					ContactHours = row.Cell("L").GetInt(),
-					Lec = row.Cell("N").GetInt(),
-					Lab = row.Cell("O").GetInt(),
-					Pr = row.Cell("P").GetInt(),
-					Ind = row.Cell("Q").GetInt(),
-					Control = row.Cell("R").GetInt(),
-					ZeAtAll = row.Cells("S", "Z").Sum(val => val.GetInt()),
+					Name = row.Cell("B").GetString(), //название дисцыплины
+					Department = row.Cell("AA").GetString(), //закреплённая кафедра
+					Exam = row.Cell("C").GetInt(), //экзамен
+					Credit = row.Cell("D").GetInt(), //Зачёт
+					CreditWithRating = row.Cell("E").GetInt(), //Зачёт с оценкой
+                    Kp = row.Cell("F").GetInt(), //КП
+					Kr = row.Cell("G").GetInt(), //КР
+					Fact = row.Cell("H").GetInt(), //фактическое число З.Е.
+					ByPlan = row.Cell("K").GetInt(), //По плану
+					ContactHours = row.Cell("L").GetInt(), //Конт. раб.
+                    Lec = row.Cell("M").GetInt(), //лекции
+					Lab = row.Cell("N").GetInt(), //лабораторные 
+					Pr = row.Cell("O").GetInt(), //практические
+					Ind = row.Cell("P").GetInt(),//самостоятелтная работа
+					Control = row.Cell("Q").GetInt(), //контроль
+					ZeAtAll = row.Cells("R", "Y").Sum(val => val.GetInt()), //сумируем зачётные единицы
 
 					Parent = section
 				})
@@ -41,24 +41,24 @@ namespace DisciplineWorkProgram.Models
 				disciplines = ExcelHelpers.GetRowsWithPlus(workbook.Worksheet(WorksheetName + "Свод"))
 					.Select(row => new Discipline
 					{
-						Name = row.Cell("C").GetString(),
-						Department = row.Cell("AB").GetString(),
-						Exam = row.Cell("D").GetInt(),
-						Credit = row.Cell("E").GetInt(),
-						CreditWithRating = row.Cell("F").GetInt(),
-						Kp = row.Cell("G").GetInt(),
-						Kr = row.Cell("H").GetInt(),
-						Fact = row.Cell("I").GetInt(),
-						ByPlan = row.Cell("K").GetInt(),
-						ContactHours = row.Cell("L").GetInt(),
-						Lec = row.Cell("N").GetInt(),
-						Lab = row.Cell("O").GetInt(),
-						Pr = row.Cell("P").GetInt(),
-						Ind = row.Cell("Q").GetInt(),
-						Control = row.Cell("R").GetInt(),
-						ZeAtAll = row.Cells("S", "Z").Sum(val => val.GetInt()),
+                        Name = row.Cell("C").GetString(), //название дисцыплины
+                        Department = row.Cell("AA").GetString(), //закреплённая кафедра
+                        Exam = row.Cell("D").GetInt(), //экзамен
+                        Credit = row.Cell("E").GetInt(), //Зачёт
+                        CreditWithRating = row.Cell("F").GetInt(), //Зачёт с оценкой
+                        Kp = row.Cell("G").GetInt(), //КП
+                        Kr = row.Cell("H").GetInt(), //КР
+                        Fact = row.Cell("J").GetInt(), //фактическое число З.Е.
+                        ByPlan = row.Cell("L").GetInt(), //По плану
+                        ContactHours = row.Cell("K").GetInt(), //Конт. раб.
+                        Lec = row.Cell("N").GetInt(), //лекции
+                        Lab = row.Cell("N").GetInt(), //лабораторные 
+                        Pr = row.Cell("N").GetInt(), //практические
+                        Ind = row.Cell("O").GetInt(),//самостоятелтная работа
+                        Control = row.Cell("P").GetInt(), //контроль
+                        ZeAtAll = row.Cells("R", "Y").Sum(val => val.GetInt()), //сумируем зачётные единицы
 
-						Parent = section
+                        Parent = section
 					})
 					.ToDictionary(discipline => discipline.Name);
 			}

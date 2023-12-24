@@ -16,6 +16,7 @@ namespace DisciplineWorkProgram.ViewModels
 {
 	public class MainWindowViewModel : INotifyPropertyChanged
 	{
+		//путь к шаблону
 		public string TemplatePath = Directory.GetCurrentDirectory() + "\\DWP_TemplateBookmarks.docx";
 		public const string DwpDir = "dwp/";
 

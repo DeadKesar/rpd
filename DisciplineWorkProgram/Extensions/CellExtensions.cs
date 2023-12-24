@@ -6,6 +6,7 @@ namespace DisciplineWorkProgram.Extensions
 	{
 		public static int GetInt(this IXLCell cell)
 		{
+			//кто так делает то...
 			try
 			{
 				return cell.GetValue<int>();

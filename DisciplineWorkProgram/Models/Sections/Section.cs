@@ -98,14 +98,27 @@ namespace DisciplineWorkProgram.Models.Sections
 		{
 			//var regex = new Regex("(?<=\").*(?=\")");
 			var worksheet = workbook.Worksheet("Титул");
-			SectionDictionary["EducationLevel"] = worksheet.Cell("I14").Value.ToString().Replace("по программе", "").Trim();
-			SectionDictionary["WayCode"] = worksheet.Cell("B16").Value.ToString();
-			//B18 - сложная строка, требуется разложение
-			var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell("B18").Value.ToString());
-			SectionDictionary["WayName"] = matches[0].Value;
-			SectionDictionary["WaySection"] = matches[1].Value; //Профиль
-			SectionDictionary["EducationForm"] = worksheet.Cell("A31").Value.ToString().Replace("Форма обучения: ", "");
-
+			try
+			{
+				SectionDictionary["EducationLevel"] = worksheet.Cell("G15").Value.ToString().Replace("по программе", "").Trim();
+				SectionDictionary["WayCode"] = worksheet.Cell("C17").Value.ToString();
+				//B18 - сложная строка, требуется разложение
+				var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell("C19").Value.ToString());
+				SectionDictionary["WayName"] = matches[0].Value;
+				SectionDictionary["WaySection"] = matches[1].Value; //Профиль
+				SectionDictionary["EducationForm"] = worksheet.Cell("B32").Value.ToString().Replace("Форма обучения: ", "");
+			}
+			catch 
+			{
+				//костыль над здравым смыслом
+                SectionDictionary["EducationLevel"] = worksheet.Cell("F14").Value.ToString().Replace("по программе", "").Trim();
+                SectionDictionary["WayCode"] = worksheet.Cell("B16").Value.ToString();
+                //B18 - сложная строка, требуется разложение
+                var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell("B18").Value.ToString());
+                SectionDictionary["WayName"] = matches[0].Value;
+                SectionDictionary["WaySection"] = matches[1].Value; //Профиль
+                SectionDictionary["EducationForm"] = worksheet.Cell("A31").Value.ToString().Replace("Форма обучения: ", "");
+            }
 			Disciplines = DisciplineWorkProgram.Models.Helpers.GetDisciplines(workbook, this);
 			LoadDetailedDisciplineData(workbook);
 		}
@@ -114,46 +127,53 @@ namespace DisciplineWorkProgram.Models.Sections
 		{
 			foreach (var worksheet in workbook.Worksheets.Where(sheet => sheet.Name.StartsWith("Курс")))
 			{
-				foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell("C").GetString(), out _))
+                //Where(row => int.TryParse(row.Cell("C").GetString(), out _)) фильтрует строки, оставляя только те, у которых значение
+                //в ячейке столбца "C" может быть успешно преобразовано в целое число. Это достигается с помощью
+                //метода int.TryParse(), который возвращает true, если преобразование удалось, и false в противном случае.
+                foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell("C").GetString(), out _))
 					.Concat(worksheet.RowsUsed().Where(row =>
-						row.Cell("D").GetString().ToLower().ContainsAny("практика", "аттестация"))))
+						row.Cell("E").GetString().ToLower().ContainsAny("практика", "аттестация", "квалификационной"))))
 				{
-					var discipline = row.Cell("E").GetString();
+					var discipline = row.Cell("F").GetString();
 					if (string.IsNullOrWhiteSpace(discipline))
-						discipline = row.Cell("D").GetString();
+						discipline = row.Cell("E").GetString();
 
 					if (!Disciplines.ContainsKey(discipline)) continue;
 					//Изменить на трайпарс после дебага
+					//это какойто объект описывающий семестры походу
+					//Пусть это будет первый семестр
 					var semester =
 						int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "G").GetString()).Value);
 
 					var details = new DisciplineDetails
 					{
-						Monitoring = row.Cell("G").GetString(),
-						Contact = row.Cell("I").GetInt(),
-						Lec = row.Cell("J").GetInt(),
-						Lab = row.Cell("K").GetInt(),
-						Pr = row.Cell("L").GetInt(),
-						Ind = row.Cell("M").GetInt(),
-						Control = row.Cell("N").GetInt(),
-						Ze = row.Cell("O").GetInt()
+						//предположим:
+						Monitoring = row.Cell("G").GetString(), //контроль
+                        Contact = row.Cell("I").GetInt(), //Контакт
+						Lec = row.Cell("J").GetInt(), //лекции
+						Lab = row.Cell("N").GetInt(), //лабораторные
+						Pr = row.Cell("R").GetInt(), //Пр.
+						Ind = row.Cell("V").GetInt(), //хз... пусть будет СР, самостоятельные работы, т.е. индивидуальные...
+						Control = row.Cell("Z").GetInt(), //опять контроль
+						Ze = row.Cell("AD").GetInt() //зачётные единицы
 					};
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
 						Disciplines[discipline].Details.Add(semester, details);
 
-					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "Q").GetString()).Value);
-
+					
+					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "AF").GetString()).Value);
+					//а это второй
 					details = new DisciplineDetails
 					{
-						Monitoring = row.Cell("R").GetString(),
-						Contact = row.Cell("S").GetInt(),
-						Lec = row.Cell("T").GetInt(),
-						Lab = row.Cell("U").GetInt(),
-						Pr = row.Cell("V").GetInt(),
-						Ind = row.Cell("W").GetInt(),
-						Control = row.Cell("X").GetInt(),
-						Ze = row.Cell("Y").GetInt()
+						Monitoring = row.Cell("AF").GetString(),
+						Contact = row.Cell("AH").GetInt(),
+						Lec = row.Cell("AI").GetInt(),
+						Lab = row.Cell("AM").GetInt(),
+						Pr = row.Cell("AQ").GetInt(),
+						Ind = row.Cell("AU").GetInt(),
+						Control = row.Cell("AY").GetInt(),
+						Ze = row.Cell("BC").GetInt()
 					};
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
@@ -167,11 +187,11 @@ namespace DisciplineWorkProgram.Models.Sections
 			var competencies = ParseCompetencies(document).ToArray();
 			//Составление набора ключей-компетенций
 			foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
-				Competencies[competency.Substring(0, competency.IndexOf('.'))] =
+				Competencies[competency.Substring(0, competency.IndexOf('.')).Replace(" ", "")] =
 					new Competence { Name = competency };
 
 			foreach (var competency in competencies.Where(text => !RegexPatterns.CompetenceName.IsMatch(text)))
-				Competencies[competency.Substring(0, competency.IndexOf('.'))]
+				Competencies[competency.Substring(0, competency.IndexOf('.')).Replace(" ", "")]
 					.Competencies.Add(competency);
 		}
 
