@@ -7,6 +7,8 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using static DisciplineWorkProgram.Word.Helpers.Tables;
 using static DisciplineWorkProgram.Models.Sections.Helpers.Competencies;
+using System.Text.RegularExpressions;
+using System;
 
 namespace DisciplineWorkProgram.Models.Sections
 {
@@ -77,7 +79,7 @@ namespace DisciplineWorkProgram.Models.Sections
 					if (row.Descendants<TableCell>().Count() < 2) continue; //Если повторно некоторый заголовок
 
 					var cells = row.Descendants<TableCell>().ToArray();
-					var disc = cells[0].Elements<Paragraph>().Single().InnerText; //название дисциплины в первой ячейке
+					var disc = cells[0].InnerText; //название дисциплины в первой ячейке
 
 					if (!DisciplineCompetencies.ContainsKey(disc))
 						DisciplineCompetencies[disc] = new List<string>();
@@ -85,7 +87,7 @@ namespace DisciplineWorkProgram.Models.Sections
 					for (var i = 1; i < cells.Length; i++)
 					{
 						if (!RegexPatterns.Competence.IsMatch(headers[i]) ||
-							string.IsNullOrWhiteSpace(cells[i].Elements<Paragraph>().Single().InnerText))
+							string.IsNullOrWhiteSpace(cells[i].InnerText))
 							continue;
 
 						DisciplineCompetencies[disc].Add(headers[i]);
@@ -98,26 +100,28 @@ namespace DisciplineWorkProgram.Models.Sections
 		{
 			//var regex = new Regex("(?<=\").*(?=\")");
 			var worksheet = workbook.Worksheet("Титул");
-			try
-			{
-				SectionDictionary["EducationLevel"] = worksheet.Cell("G15").Value.ToString().Replace("по программе", "").Trim();
-				SectionDictionary["WayCode"] = worksheet.Cell("C17").Value.ToString();
-				//B18 - сложная строка, требуется разложение
-				var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell("C19").Value.ToString());
-				SectionDictionary["WayName"] = matches[0].Value;
-				SectionDictionary["WaySection"] = matches[1].Value; //Профиль
-				SectionDictionary["EducationForm"] = worksheet.Cell("B32").Value.ToString().Replace("Форма обучения: ", "");
-			}
-			catch 
-			{
-				//костыль над здравым смыслом
-                SectionDictionary["EducationLevel"] = worksheet.Cell("F14").Value.ToString().Replace("по программе", "").Trim();
-                SectionDictionary["WayCode"] = worksheet.Cell("B16").Value.ToString();
-                //B18 - сложная строка, требуется разложение
-                var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell("B18").Value.ToString());
-                SectionDictionary["WayName"] = matches[0].Value;
-                SectionDictionary["WaySection"] = matches[1].Value; //Профиль
-                SectionDictionary["EducationForm"] = worksheet.Cell("A31").Value.ToString().Replace("Форма обучения: ", "");
+			var rows = worksheet.Rows();
+			var cells = rows.CellsUsed();
+            foreach (var cell in cells)
+            {
+                if (cell.GetString().Contains("по программе"))
+                {
+                    SectionDictionary["EducationLevel"] = cell.GetString().Replace("по программе", "").Trim();
+                }
+                if (Regex.IsMatch(cell.GetString(), "^\\d\\d.\\d\\d.\\d\\d"))
+                {
+                    SectionDictionary["WayCode"] = cell.GetString();
+                }
+                if (cell.GetString().Contains("Программа"))
+                {
+                    var matches = RegexPatterns.WayNameSection.Matches(cell.GetString());
+                    SectionDictionary["WayName"] = matches[0].Value;
+                    SectionDictionary["WaySection"] = matches[1].Value; //Профиль
+                }
+                if (cell.GetString().Contains("Форма обучения: "))
+                {
+                    SectionDictionary["EducationForm"] = cell.GetString().Replace("Форма обучения: ", "");
+                }
             }
 			Disciplines = DisciplineWorkProgram.Models.Helpers.GetDisciplines(workbook, this);
 			LoadDetailedDisciplineData(workbook);

@@ -40,6 +40,8 @@ namespace DisciplineWorkProgram.Models.Sections.Helpers
 				{
 					competencies.Add(ss2[i-1] + " " + ss[i]);
 				}
+
+
             }
             return competencies;
 		}
