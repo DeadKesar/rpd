@@ -121,7 +121,7 @@ namespace DisciplineWorkProgram.ViewModels
 			//dialog.Filters.Add(new FileDialogFilter() { Name = "Text", Extensions = { "txt" } });
 			result = await dialog.ShowAsync(new Window());
 
-			return result[0] == null ? null : result[0];
+			return result == null ? null : result[0];
 
 			//var dialog = new OpenFileDialog();
 

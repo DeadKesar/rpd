@@ -7,6 +7,9 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using static DisciplineWorkProgram.Word.Helpers.Tables;
 using static DisciplineWorkProgram.Models.Sections.Helpers.Competencies;
+using System;
+using System.Reactive.Joins;
+using System.Text.RegularExpressions;
 
 namespace DisciplineWorkProgram.Models.Sections
 {
@@ -98,13 +101,33 @@ namespace DisciplineWorkProgram.Models.Sections
 		{
 			//var regex = new Regex("(?<=\").*(?=\")");
 			var worksheet = workbook.Worksheet("Титул");
-			SectionDictionary["EducationLevel"] = worksheet.Cell("I14").Value.ToString().Replace("по программе", "").Trim();
-			SectionDictionary["WayCode"] = worksheet.Cell("B16").Value.ToString();
+			SectionDictionary["EducationLevel"] = worksheet.Cell(FindCell(worksheet, "квалификация", false)).Value.ToString().ToLower().Replace("квалификация:", "").Trim();
+			switch (SectionDictionary["EducationLevel"])
+			{
+				case "бакалавр":
+				{
+						SectionDictionary["EducationLevel"] = "Бакалавриат";
+                        break;
+				}
+                case "магистр":
+                    {
+                        SectionDictionary["EducationLevel"] = "Магистратура";
+                        break;
+                    }
+                case "аспирант":
+                    {
+                        SectionDictionary["EducationLevel"] = "Аспирантура";
+                        break;
+                    }
+                default:
+					break;
+			}
+			SectionDictionary["WayCode"] = worksheet.Cell(FindCell(worksheet, "\\d\\d.\\d\\d.\\d\\d$", true)).Value.ToString();
 			//B18 - сложная строка, требуется разложение
-			var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell("B18").Value.ToString());
+			var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell(FindCell(worksheet, "направление подготовки")).Value.ToString());
 			SectionDictionary["WayName"] = matches[0].Value;
 			SectionDictionary["WaySection"] = matches[1].Value; //Профиль
-			SectionDictionary["EducationForm"] = worksheet.Cell("A31").Value.ToString().Replace("Форма обучения: ", "");
+			SectionDictionary["EducationForm"] = worksheet.Cell(FindCell(worksheet, "форма обучения")).Value.ToString().Replace("Форма обучения: ", "");
 
 			Disciplines = DisciplineWorkProgram.Models.Helpers.GetDisciplines(workbook, this);
 			LoadDetailedDisciplineData(workbook);
@@ -179,5 +202,46 @@ namespace DisciplineWorkProgram.Models.Sections
 			Disciplines
 				.Where(d => d.Value.IsChecked)
 				.Select(kv => kv.Key);
-	}
+
+        /// <summary>
+        /// Поиск заданного слова на странице
+        /// </summary>
+        /// <param name="worksheet">страница для поиска</param>
+        /// <param name="target">слово которое ищем</param>
+        /// <param name="isRegex">true если хотим передать регекс, иначе false</param>
+        /// <returns>адресс ячейки где нашли слово(первый встреченный)</returns>
+        /// <exception cref="Exception">нет искомого поля</exception>
+        private string FindCell(IXLWorksheet worksheet, string target, bool isRegex = false)
+		{
+			if (isRegex) {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        string cellValue = cell.GetValue<string>();
+                        if (Regex.IsMatch(cellValue, target, RegexOptions.IgnoreCase))
+                        {
+                            return cell.Address.ToString();
+                        }
+                    }
+                }
+                throw new Exception($"Нет ПАТЕРНА {target} в документе");
+            }
+			else
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						if (cell.GetValue<string>().Contains(target, StringComparison.OrdinalIgnoreCase))
+						{
+							return cell.Address.ToString();
+						}
+					}
+				}
+				throw new Exception($"Нет поля {target} в документе");
+			}
+		}
+
+    }
 }

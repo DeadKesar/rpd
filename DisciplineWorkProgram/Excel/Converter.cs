@@ -19,6 +19,7 @@ namespace DisciplineWorkProgram.Excel
 			ConvertXlsToXlsx(path).Write(File.Create(newPath));
 		}
 
+		//создаём в памяти почищенный учебный план
 		public static Stream Convert(string path)
 		{
 			var newPlan = new NpoiMemoryStream() { AllowClose = false };
