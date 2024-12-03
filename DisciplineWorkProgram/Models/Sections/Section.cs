@@ -80,16 +80,17 @@ namespace DisciplineWorkProgram.Models.Sections
 					if (row.Descendants<TableCell>().Count() < 2) continue; //Если повторно некоторый заголовок
 
 					var cells = row.Descendants<TableCell>().ToArray();
-					var disc = cells[0].Elements<Paragraph>().Single().InnerText; //название дисциплины в первой ячейке
+					//var disc = cells[0].Elements<Paragraph>().Single().InnerText; //название дисциплины в первой ячейке
+					var disc = cells[0].InnerText;
 
-					if (!DisciplineCompetencies.ContainsKey(disc))
+                    if (!DisciplineCompetencies.ContainsKey(disc))
 						DisciplineCompetencies[disc] = new List<string>();
 					//Если заголовок не код компетенции или ячейка пуста, то пропускаем
 					for (var i = 1; i < cells.Length; i++)
 					{
 						if (!RegexPatterns.Competence.IsMatch(headers[i]) ||
-							string.IsNullOrWhiteSpace(cells[i].Elements<Paragraph>().Single().InnerText))
-							continue;
+							string.IsNullOrWhiteSpace(cells[i].InnerText))//string.IsNullOrWhiteSpace(cells[i].Elements<Paragraph>().Single().InnerText))
+                            continue;
 
 						DisciplineCompetencies[disc].Add(headers[i]);
 					}
@@ -146,8 +147,9 @@ namespace DisciplineWorkProgram.Models.Sections
 						discipline = row.Cell("D").GetString();
 
 					if (!Disciplines.ContainsKey(discipline)) continue;
-					//Изменить на трайпарс после дебага
-					var semester =
+                    //Изменить на трайпарс после дебага
+                    //to do: заменить на поиск по странице.
+                    var semester =
 						int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "G").GetString()).Value);
 
 					var details = new DisciplineDetails
@@ -155,28 +157,28 @@ namespace DisciplineWorkProgram.Models.Sections
 						Monitoring = row.Cell("G").GetString(),
 						Contact = row.Cell("I").GetInt(),
 						Lec = row.Cell("J").GetInt(),
-						Lab = row.Cell("K").GetInt(),
-						Pr = row.Cell("L").GetInt(),
-						Ind = row.Cell("M").GetInt(),
-						Control = row.Cell("N").GetInt(),
-						Ze = row.Cell("O").GetInt()
+						Lab = row.Cell("N").GetInt(),
+						Pr = row.Cell("R").GetInt(),
+						Ind = row.Cell("V").GetInt(),
+						Control = row.Cell("Z").GetInt(),
+						Ze = row.Cell("AD").GetInt()
 					};
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
 						Disciplines[discipline].Details.Add(semester, details);
-
-					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "Q").GetString()).Value);
+					//to do: заменить на поиск по странице.
+					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "AF").GetString()).Value);
 
 					details = new DisciplineDetails
 					{
-						Monitoring = row.Cell("R").GetString(),
-						Contact = row.Cell("S").GetInt(),
-						Lec = row.Cell("T").GetInt(),
-						Lab = row.Cell("U").GetInt(),
-						Pr = row.Cell("V").GetInt(),
-						Ind = row.Cell("W").GetInt(),
-						Control = row.Cell("X").GetInt(),
-						Ze = row.Cell("Y").GetInt()
+						Monitoring = row.Cell("AF").GetString(),
+						Contact = row.Cell("AH").GetInt(),
+						Lec = row.Cell("AI").GetInt(),
+						Lab = row.Cell("AM").GetInt(),
+						Pr = row.Cell("AQ").GetInt(),
+						Ind = row.Cell("AU").GetInt(),
+						Control = row.Cell("AY").GetInt(),
+						Ze = row.Cell("BC").GetInt()
 					};
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)

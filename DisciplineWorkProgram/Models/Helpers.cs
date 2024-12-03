@@ -18,26 +18,25 @@ namespace DisciplineWorkProgram.Models
             
 
             var worksheet = workbook.Worksheet(WorksheetName);
-            var add = FindCell(worksheet, "закрепленная кафедра");
             var disciplines = ExcelHelpers.GetRowsWithPlus(worksheet)
 				.Select(row => new Discipline
 				{
-					Name = row.Cell(FindCell(worksheet, "наименование")).GetString(),
-					Department = row.Cell(FindCell(worksheet, "закрепленная кафедра")).GetString(),
-					Exam = row.Cell("D").GetInt(),
-					Credit = row.Cell("E").GetInt(),
-					CreditWithRating = row.Cell("F").GetInt(),
-					Kp = row.Cell("G").GetInt(),
-					Kr = row.Cell("H").GetInt(),
-					Fact = row.Cell("I").GetInt(),
-					ByPlan = row.Cell("K").GetInt(),
-					ContactHours = row.Cell("L").GetInt(),
-					Lec = row.Cell("N").GetInt(),
-					Lab = row.Cell("O").GetInt(),
-					Pr = row.Cell("P").GetInt(),
-					Ind = row.Cell("Q").GetInt(),
-					Control = row.Cell("R").GetInt(),
-					ZeAtAll = row.Cells("S", "Z").Sum(val => val.GetInt()),
+					Name = row.Cell(FindCell(worksheet, "наименование")).GetString(), //C
+					Department = row.Cell(FindCell(worksheet, "закрепленная кафедра", "наименование")).GetString(),
+					Exam = row.Cell(FindCell(worksheet, "[Э|э]?\\s*[K|к]\\s*[З|з]\\s*[А|а]\\s*[М|м]\\s*[Е|е]\\s*[Н|н]", true)).GetInt(),
+					Credit = row.Cell(FindCell(worksheet, "зачет")).GetInt(),
+					CreditWithRating = row.Cell(FindCell(worksheet, "зачет с оц")).GetInt(),
+					Kp = row.Cell(FindCell(worksheet, "^кп$",true)).GetInt(),
+					Kr = row.Cell(FindCell(worksheet, "^кр$", true)).GetInt(),
+					Fact = row.Cell(FindCell(worksheet, "факт")).GetInt(),
+					ByPlan = row.Cell(FindCell(worksheet, "По плану")).GetInt(),
+					ContactHours = row.Cell(FindCell(worksheet, "Конт. раб.")).GetInt(),
+					Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
+					Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
+					Pr = row.Cell(FindCell(worksheet, "^ср$", true)).GetInt(),
+					Ind = row.Cell(FindCell(worksheet, "индекс")).GetInt(),
+					Control = row.Cell(FindCell(worksheet, "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
+					ZeAtAll = row.Cells(FindCell(worksheet, "Семестр 1"), FindCell(worksheet, "Семестр 8")).Sum(val => val.GetInt()),
 
 					Parent = section
 				})
@@ -48,24 +47,24 @@ namespace DisciplineWorkProgram.Models
 				disciplines = ExcelHelpers.GetRowsWithPlus(workbook.Worksheet(WorksheetName + "Свод"))
 					.Select(row => new Discipline
 					{
-						Name = row.Cell("C").GetString(),
-						Department = row.Cell("AB").GetString(),
-						Exam = row.Cell("D").GetInt(),
-						Credit = row.Cell("E").GetInt(),
-						CreditWithRating = row.Cell("F").GetInt(),
-						Kp = row.Cell("G").GetInt(),
-						Kr = row.Cell("H").GetInt(),
-						Fact = row.Cell("I").GetInt(),
-						ByPlan = row.Cell("K").GetInt(),
-						ContactHours = row.Cell("L").GetInt(),
-						Lec = row.Cell("N").GetInt(),
-						Lab = row.Cell("O").GetInt(),
-						Pr = row.Cell("P").GetInt(),
-						Ind = row.Cell("Q").GetInt(),
-						Control = row.Cell("R").GetInt(),
-						ZeAtAll = row.Cells("S", "Z").Sum(val => val.GetInt()),
+                        Name = row.Cell(FindCell(worksheet, "наименование")).GetString(), //C
+                        Department = row.Cell(FindCell(worksheet, "закрепленная кафедра", "наименование")).GetString(),
+                        Exam = row.Cell(FindCell(worksheet, "[Э|э]?\\s*[K|к]\\s*[З|з]\\s*[А|а]\\s*[М|м]\\s*[Е|е]\\s*[Н|н]", true)).GetInt(),
+                        Credit = row.Cell(FindCell(worksheet, "зачет")).GetInt(),
+                        CreditWithRating = row.Cell(FindCell(worksheet, "зачет с оц")).GetInt(),
+                        Kp = row.Cell(FindCell(worksheet, "^кп$", true)).GetInt(),
+                        Kr = row.Cell(FindCell(worksheet, "^кр$", true)).GetInt(),
+                        Fact = row.Cell(FindCell(worksheet, "факт")).GetInt(),
+                        ByPlan = row.Cell(FindCell(worksheet, "По плану")).GetInt(),
+                        ContactHours = row.Cell(FindCell(worksheet, "Конт. раб.")).GetInt(),
+                        Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
+                        Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
+                        Pr = row.Cell(FindCell(worksheet, "^ср$", true)).GetInt(),
+                        Ind = row.Cell(FindCell(worksheet, "индекс")).GetInt(),
+                        Control = row.Cell(FindCell(worksheet, "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
+                        ZeAtAll = row.Cells(FindCell(worksheet, "Семестр 1"), FindCell(worksheet, "Семестр 8")).Sum(val => val.GetInt()),
 
-						Parent = section
+                        Parent = section
 					})
 					.ToDictionary(discipline => discipline.Name);
 			}
@@ -121,9 +120,9 @@ namespace DisciplineWorkProgram.Models
                 {
                     foreach (var cell in row.CellsUsed())
                     {
-                        if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
-                        {
-                            var range = worksheet.Range(cell.CurrentRegion.ToString());
+                    if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
                         foreach (var cellValue in range.CellsUsed())
                         {
                             if (cellValue.GetValue<string>().Contains(target2, StringComparison.OrdinalIgnoreCase))

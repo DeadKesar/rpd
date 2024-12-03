@@ -23,7 +23,7 @@ namespace DisciplineWorkProgram.Models.Sections.Helpers
 						competencies.Add(tmp.RemoveMultipleSpaces());
 						tmp = string.Empty;
 					}
-					tmp += text.Text + " ";
+					tmp += text.Text;
 				}
 				if (!string.IsNullOrEmpty(tmp)) competencies.Add(tmp.RemoveMultipleSpaces());
 			}
