@@ -154,7 +154,7 @@ namespace DisciplineWorkProgram.Models
 					Section.Disciplines[discipline].Details
 						.FirstOrDefault(elem =>
 							elem.Key == Section.Disciplines[discipline].Details.Keys.Max())
-						.Value.Monitoring)));
+                        .Value?.Monitoring ?? "НЕТ")));
 
 			FindElementsByBookmark<Table>(bookmarkMap["DisciplinePartitionTable1"], 2)
 				.First()
@@ -167,11 +167,20 @@ namespace DisciplineWorkProgram.Models
 
 			FindElementsByBookmark<Text>(bookmarkMap["Semester1"], 1)
 					.First(elem => elem.Text.Contains("Autofill" + "Semester"))
-					.Text =
-				Section.Disciplines[discipline].Details.Keys
-					.Select(elem => elem.ToString())
-					.Aggregate((curr, next) => curr + ", " + next);
-		}
+					.Text = Section.Disciplines[discipline].Details.Keys.Any()
+						? Section.Disciplines[discipline].Details.Keys
+						.Select(elem => elem.ToString())
+						.Aggregate((curr, next) => curr + ", " + next)
+						: "        ";
+
+
+
+            /*
+        Section.Disciplines[discipline].Details.Keys
+            .Select(elem => elem.ToString())
+            .Aggregate((curr, next) => curr + ", " + next);
+            */
+        }
 
 		private void WriteCompetencies(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
@@ -310,22 +319,39 @@ namespace DisciplineWorkProgram.Models
 
 			void WriteAtAllColumn()
 			{
-				//if (Disciplines[discipline].Details.Count == 0) return;
 				var i = 0;
-				var atAll = new DisciplineDetails
-				{
-					Monitoring = Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring)
-						.Aggregate((current, next) => current + ", " + next),
-					Contact = Section.Disciplines[discipline].Details.Values.Sum(details => details.Contact),
-					Lec = Section.Disciplines[discipline].Details.Values.Sum(details => details.Lec),
-					Lab = Section.Disciplines[discipline].Details.Values.Sum(details => details.Lab),
-					Pr = Section.Disciplines[discipline].Details.Values.Sum(details => details.Pr),
-					Ind = Section.Disciplines[discipline].Details.Values.Sum(details => details.Ind),
-					Control = Section.Disciplines[discipline].Details.Values.Sum(details => details.Control),
-					Ze = Section.Disciplines[discipline].Details.Values.Sum(details => details.Ze)
-				};
+				var atAll = new DisciplineDetails();
 
-				rows.First().AppendChild(new TableCell(
+                if (Section.Disciplines[discipline].Details.Count == 0)
+				{
+                    atAll = new DisciplineDetails
+                    {
+                        Monitoring = " , , , , , , , , ",
+                        Contact = 0,
+                        Lec = 0,
+                        Lab = 0,
+                        Pr = 0,
+                        Ind = 0,
+                        Control = 0,
+                        Ze = 0
+                    };
+                } 
+				else 
+				{ 
+					atAll = new DisciplineDetails
+					{
+						Monitoring = Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring)
+							.Aggregate((current, next) => current + ", " + next),
+						Contact = Section.Disciplines[discipline].Details.Values.Sum(details => details.Contact),
+						Lec = Section.Disciplines[discipline].Details.Values.Sum(details => details.Lec),
+						Lab = Section.Disciplines[discipline].Details.Values.Sum(details => details.Lab),
+						Pr = Section.Disciplines[discipline].Details.Values.Sum(details => details.Pr),
+						Ind = Section.Disciplines[discipline].Details.Values.Sum(details => details.Ind),
+						Control = Section.Disciplines[discipline].Details.Values.Sum(details => details.Control),
+						Ze = Section.Disciplines[discipline].Details.Values.Sum(details => details.Ze)
+					};
+                }
+                rows.First().AppendChild(new TableCell(
 					new TableCellProperties(
 						new HorizontalMerge { Val = MergedCellValues.Continue }),
 					new Paragraph()));

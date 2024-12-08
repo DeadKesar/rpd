@@ -10,6 +10,8 @@ using static DisciplineWorkProgram.Models.Sections.Helpers.Competencies;
 using System;
 using System.Reactive.Joins;
 using System.Text.RegularExpressions;
+using NPOI.SS.Formula.Functions;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace DisciplineWorkProgram.Models.Sections
 {
@@ -83,14 +85,14 @@ namespace DisciplineWorkProgram.Models.Sections
 					//var disc = cells[0].Elements<Paragraph>().Single().InnerText; //название дисциплины в первой ячейке
 					var disc = cells[0].InnerText;
 
-                    if (!DisciplineCompetencies.ContainsKey(disc))
+					if (!DisciplineCompetencies.ContainsKey(disc))
 						DisciplineCompetencies[disc] = new List<string>();
 					//Если заголовок не код компетенции или ячейка пуста, то пропускаем
 					for (var i = 1; i < cells.Length; i++)
 					{
 						if (!RegexPatterns.Competence.IsMatch(headers[i]) ||
 							string.IsNullOrWhiteSpace(cells[i].InnerText))//string.IsNullOrWhiteSpace(cells[i].Elements<Paragraph>().Single().InnerText))
-                            continue;
+							continue;
 
 						DisciplineCompetencies[disc].Add(headers[i]);
 					}
@@ -106,21 +108,21 @@ namespace DisciplineWorkProgram.Models.Sections
 			switch (SectionDictionary["EducationLevel"])
 			{
 				case "бакалавр":
-				{
+					{
 						SectionDictionary["EducationLevel"] = "Бакалавриат";
-                        break;
-				}
-                case "магистр":
-                    {
-                        SectionDictionary["EducationLevel"] = "Магистратура";
-                        break;
-                    }
-                case "аспирант":
-                    {
-                        SectionDictionary["EducationLevel"] = "Аспирантура";
-                        break;
-                    }
-                default:
+						break;
+					}
+				case "магистр":
+					{
+						SectionDictionary["EducationLevel"] = "Магистратура";
+						break;
+					}
+				case "аспирант":
+					{
+						SectionDictionary["EducationLevel"] = "Аспирантура";
+						break;
+					}
+				default:
 					break;
 			}
 			SectionDictionary["WayCode"] = worksheet.Cell(FindCell(worksheet, "\\d\\d.\\d\\d.\\d\\d$", true)).Value.ToString();
@@ -134,52 +136,57 @@ namespace DisciplineWorkProgram.Models.Sections
 			LoadDetailedDisciplineData(workbook);
 		}
 
+
+
 		private void LoadDetailedDisciplineData(IXLWorkbook workbook)
 		{
 			foreach (var worksheet in workbook.Worksheets.Where(sheet => sheet.Name.StartsWith("Курс")))
 			{
-				foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell("C").GetString(), out _))
+                foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell(FindColumn(worksheet, "№")).GetString(), out _))
 					.Concat(worksheet.RowsUsed().Where(row =>
-						row.Cell("D").GetString().ToLower().ContainsAny("практика", "аттестация"))))
+						row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация"))))
 				{
-					var discipline = row.Cell("E").GetString();
+					var discipline = row.Cell(FindColumn(worksheet, "Наименование", true)).GetString();
 					if (string.IsNullOrWhiteSpace(discipline))
-						discipline = row.Cell("D").GetString();
+						discipline = row.Cell("E").GetString(); //вроде не актуально
 
 					if (!Disciplines.ContainsKey(discipline)) continue;
-                    //Изменить на трайпарс после дебага
-                    //to do: заменить на поиск по странице.
-                    var semester =
-						int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "G").GetString()).Value);
+					//Изменить на трайпарс после дебага
+					
+					string[] semestrs = FindTwoCell(worksheet, "семестр");
+					var semester =
+						int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value);
+					string[] academChas = FindTwoCell(worksheet, "Академических");
 
-					var details = new DisciplineDetails
+
+                    var details = new DisciplineDetails
 					{
-						Monitoring = row.Cell("G").GetString(),
-						Contact = row.Cell("I").GetInt(),
-						Lec = row.Cell("J").GetInt(),
-						Lab = row.Cell("N").GetInt(),
-						Pr = row.Cell("R").GetInt(),
-						Ind = row.Cell("V").GetInt(),
-						Control = row.Cell("Z").GetInt(),
-						Ze = row.Cell("AD").GetInt()
+						Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
+						Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
+						Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лек$", true)).GetInt(),
+						Lab = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лаб$", true)).GetInt(),
+						Pr = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^пр$", true)).GetInt(),
+						Ind = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^ср$", true)).GetInt(),
+						Control = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
+						Ze = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), @"^з\.е\.$", true)).GetInt()
 					};
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
 						Disciplines[discipline].Details.Add(semester, details);
 					//to do: заменить на поиск по странице.
-					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(3, "AF").GetString()).Value);
+					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[1]).GetString()).Value);
 
 					details = new DisciplineDetails
 					{
-						Monitoring = row.Cell("AF").GetString(),
-						Contact = row.Cell("AH").GetInt(),
-						Lec = row.Cell("AI").GetInt(),
-						Lab = row.Cell("AM").GetInt(),
-						Pr = row.Cell("AQ").GetInt(),
-						Ind = row.Cell("AU").GetInt(),
-						Control = row.Cell("AY").GetInt(),
-						Ze = row.Cell("BC").GetInt()
-					};
+                        Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
+                        Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
+                        Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лек$", true)).GetInt(),
+                        Lab = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лаб$", true)).GetInt(),
+                        Pr = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^пр$", true)).GetInt(),
+                        Ind = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^ср$", true)).GetInt(),
+                        Control = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
+                        Ze = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), @"^з\.е\.$", true)).GetInt()
+                    };
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
 						Disciplines[discipline].Details.Add(semester, details);
@@ -205,30 +212,31 @@ namespace DisciplineWorkProgram.Models.Sections
 				.Where(d => d.Value.IsChecked)
 				.Select(kv => kv.Key);
 
-        /// <summary>
-        /// Поиск заданного слова на странице
-        /// </summary>
-        /// <param name="worksheet">страница для поиска</param>
-        /// <param name="target">слово которое ищем</param>
-        /// <param name="isRegex">true если хотим передать регекс, иначе false</param>
-        /// <returns>адресс ячейки где нашли слово(первый встреченный)</returns>
-        /// <exception cref="Exception">нет искомого поля</exception>
-        private string FindCell(IXLWorksheet worksheet, string target, bool isRegex = false)
+		/// <summary>
+		/// Поиск заданного слова на странице
+		/// </summary>
+		/// <param name="worksheet">страница для поиска</param>
+		/// <param name="target">слово которое ищем</param>
+		/// <param name="isRegex">true если хотим передать регекс, иначе false</param>
+		/// <returns>адресс ячейки где нашли слово(первый встреченный)</returns>
+		/// <exception cref="Exception">нет искомого поля</exception>
+		private static string FindCell(IXLWorksheet worksheet, string target, bool isRegex = false)
 		{
-			if (isRegex) {
-                foreach (var row in worksheet.RowsUsed())
-                {
-                    foreach (var cell in row.CellsUsed())
-                    {
-                        string cellValue = cell.GetValue<string>();
-                        if (Regex.IsMatch(cellValue, target, RegexOptions.IgnoreCase))
-                        {
-                            return cell.Address.ToString();
-                        }
-                    }
-                }
-                throw new Exception($"Нет ПАТЕРНА {target} в документе");
-            }
+			if (isRegex)
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						string cellValue = cell.GetValue<string>();
+						if (Regex.IsMatch(cellValue, target, RegexOptions.IgnoreCase))
+						{
+							return cell.Address.ToString();
+						}
+					}
+				}
+				throw new Exception($"Нет ПАТЕРНА {target} в документе");
+			}
 			else
 			{
 				foreach (var row in worksheet.RowsUsed())
@@ -245,5 +253,237 @@ namespace DisciplineWorkProgram.Models.Sections
 			}
 		}
 
+		private static string[] FindTwoCell(IXLWorksheet worksheet, string target, bool isRegex = false)
+		{
+			string[] answ = new string[2];
+			int count = 0;
+			if (isRegex)
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						string cellValue = cell.GetValue<string>();
+						if (Regex.IsMatch(cellValue, target, RegexOptions.IgnoreCase))
+						{
+							answ[count++] = cell.Address.ToString();
+							if (count == 2) { return answ; }
+
+						}
+					}
+				}
+				throw new Exception($"Нет ПАТЕРНА {target} в документе в количестве 2-ух штук.");
+			}
+			else
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						if (cell.GetValue<string>().Contains(target, StringComparison.OrdinalIgnoreCase))
+						{
+							answ[count++] = cell.Address.ToString();
+							if (count == 2) { return answ; }
+						}
+					}
+				}
+				throw new Exception($"Нет поля {target} в документе");
+			}
+		}
+
+		private static string FindCell(IXLWorksheet worksheet, string target1, string target2, bool isRegex = false)
+		{
+			if (isRegex)
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
+						{
+							var mergedRange = cell.MergedRange() ?? cell.AsRange();
+							var firstColumn = mergedRange.FirstCell().Address.ColumnLetter;
+							var lastColumn = mergedRange.LastCell().Address.ColumnLetter;
+							int startRow = mergedRange.LastCell().Address.RowNumber + 1;
+							int endRow = worksheet.LastRowUsed().RowNumber();
+							var searchRange = worksheet.Range($"{firstColumn}{startRow}:{lastColumn}{endRow}");
+
+
+							//var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
+							foreach (var cellValue in searchRange.CellsUsed())
+							{
+								string cellForReg = cellValue.GetValue<string>();
+								if (Regex.IsMatch(cellForReg, target2, RegexOptions.IgnoreCase))
+								{
+									return cell.Address.ToString();
+								}
+							}
+							throw new Exception($"Нет ПАТЕРНА {target2} в документе");
+						}
+					}
+				}
+			}
+
+			else
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
+						{
+							var mergedRange = cell.MergedRange() ?? cell.AsRange();
+							var firstColumn = mergedRange.FirstCell().Address.ColumnLetter;
+							var lastColumn = mergedRange.LastCell().Address.ColumnLetter;
+							int startRow = mergedRange.LastCell().Address.RowNumber + 1;
+							int endRow = worksheet.LastRowUsed().RowNumber();
+							var searchRange = worksheet.Range($"{firstColumn}{startRow}:{lastColumn}{endRow}");
+
+
+							//var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
+							foreach (var cellValue in searchRange.CellsUsed())
+							{
+								if (cellValue.GetValue<string>().Contains(target2, StringComparison.OrdinalIgnoreCase))
+								{
+									return cellValue.Address.ToString();
+								}
+							}
+						}
+					}
+				}
+			}
+			throw new Exception($"Нет поля {target1} в документе {worksheet.Name}");
+		}
+
+        private static string FindColumn(IXLWorksheet worksheet, string target, bool isRegex = false)
+        {
+            if (isRegex)
+            {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        string cellValue = cell.GetValue<string>();
+                        if (Regex.IsMatch(cellValue, target, RegexOptions.IgnoreCase))
+                        {
+                            return cell.Address.ColumnLetter.ToString();
+                        }
+                    }
+                }
+                throw new Exception($"Нет ПАТЕРНА {target} в документе");
+            }
+            else
+            {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        if (cell.GetValue<string>().Contains(target, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return cell.Address.ColumnLetter.ToString();
+                        }
+                    }
+                }
+                throw new Exception($"Нет поля {target} в документе");
+            }
+        }
+
+        private static string FindColumn(IXLWorksheet worksheet, string target1, string target2, bool isRegex = false)
+		{
+			if (isRegex)
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
+						{
+							var mergedRange = cell.MergedRange() ?? cell.AsRange();
+							var firstColumn = mergedRange.FirstCell().Address.ColumnLetter;
+							var lastColumn = mergedRange.LastCell().Address.ColumnLetter;
+							int startRow = mergedRange.LastCell().Address.RowNumber + 1;
+							int endRow = worksheet.LastRowUsed().RowNumber();
+							var searchRange = worksheet.Range($"{firstColumn}{startRow}:{lastColumn}{endRow}");
+
+
+							//var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
+							foreach (var cellValue in searchRange.CellsUsed())
+							{
+								string cellForReg = cellValue.GetValue<string>();
+								if (Regex.IsMatch(cellForReg, target2, RegexOptions.IgnoreCase))
+								{
+									return cellValue.Address.ColumnLetter.ToString();
+								}
+							}
+							throw new Exception($"Нет ПАТЕРНА {target2} в документе");
+						}
+					}
+				}
+			}
+
+			else
+			{
+				foreach (var row in worksheet.RowsUsed())
+				{
+					foreach (var cell in row.CellsUsed())
+					{
+						if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
+						{
+							var mergedRange = cell.MergedRange() ?? cell.AsRange();
+							var firstColumn = mergedRange.FirstCell().Address.ColumnLetter;
+							var lastColumn = mergedRange.LastCell().Address.ColumnLetter;
+							int startRow = mergedRange.LastCell().Address.RowNumber + 1;
+							int endRow = worksheet.LastRowUsed().RowNumber();
+							var searchRange = worksheet.Range($"{firstColumn}{startRow}:{lastColumn}{endRow}");
+
+
+							//var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
+							foreach (var cellValue in searchRange.CellsUsed())
+							{
+								if (cellValue.GetValue<string>().Contains(target2, StringComparison.OrdinalIgnoreCase))
+								{
+									return cellValue.Address.ColumnLetter.ToString();
+								}
+							}
+						}
+					}
+				}
+			}
+			throw new Exception($"Нет поля {target1} в документе {worksheet.Name}");
+		}
+
+        private static string FindColumnAnderCell(IXLWorksheet worksheet, IXLCell cell, string target, bool isRegex = false)
+        {
+            var mergedRange = cell.MergedRange() ?? cell.AsRange();
+            var firstColumn = mergedRange.FirstCell().Address.ColumnLetter;
+            var lastColumn = mergedRange.LastCell().Address.ColumnLetter;
+            int startRow = mergedRange.LastCell().Address.RowNumber + 1;
+            int endRow = worksheet.LastRowUsed().RowNumber();
+            var searchRange = worksheet.Range($"{firstColumn}{startRow}:{lastColumn}{endRow}");
+
+            if (isRegex)
+            {
+                foreach (var cellValue in searchRange.CellsUsed())
+                {
+                    string cellForReg = cellValue.GetValue<string>();
+                    if (Regex.IsMatch(cellForReg, target, RegexOptions.IgnoreCase))
+                    {
+                        return cellValue.Address.ColumnLetter.ToString();
+                    }
+                }
+                throw new Exception($"Нет ПАТЕРНА {target} в документе");
+            }
+            else
+            {
+                foreach (var cellValue in searchRange.CellsUsed())
+                {
+                    if (cellValue.GetValue<string>().Contains(target, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return cellValue.Address.ColumnLetter.ToString();
+                    }
+                }
+            }
+            throw new Exception($"Нет поля {target} в документе {worksheet.Name}");
+        }
     }
 }
