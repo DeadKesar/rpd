@@ -142,6 +142,9 @@ namespace DisciplineWorkProgram.Models.Sections
 		{
 			foreach (var worksheet in workbook.Worksheets.Where(sheet => sheet.Name.StartsWith("Курс")))
 			{
+				int i = 0;
+				int cur = 0;
+				int count = 1;
                 foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell(FindColumn(worksheet, "№")).GetString(), out _))
 					.Concat(worksheet.RowsUsed().Where(row =>
 						row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация"))))
@@ -158,6 +161,17 @@ namespace DisciplineWorkProgram.Models.Sections
 						int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value);
 					string[] academChas = FindTwoCell(worksheet, "Академических");
 
+					
+					int.TryParse(row.Cell(FindColumn(worksheet, "№")).GetString(), out cur);
+					if (cur < i)
+					{
+						count++;
+					}
+					i = cur;
+					if(count < (semester + 1) / 2)
+					{
+						continue;
+					}
 
                     var details = new DisciplineDetails
 					{
@@ -199,10 +213,18 @@ namespace DisciplineWorkProgram.Models.Sections
 			var competencies = ParseCompetencies(document).ToArray();
 			//Составление набора ключей-компетенций
 			foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
-				Competencies[competency.Substring(0, competency.IndexOf('.'))] =
-					new Competence { Name = competency };
+                Competencies[
+					competency.Substring(
+						0,
+						competency.IndexOf('.') >= 0
+							? competency.IndexOf('.')
+							: competency.IndexOf(' ') >= 0
+								? competency.IndexOf(' ')
+								: competency.Length
+					)
+				] = new Competence { Name = competency };
 
-			foreach (var competency in competencies.Where(text => !RegexPatterns.CompetenceName.IsMatch(text)))
+            foreach (var competency in competencies.Where(text => !RegexPatterns.CompetenceName.IsMatch(text)))
 				Competencies[competency.Substring(0, competency.IndexOf('.'))]
 					.Competencies.Add(competency);
 		}
