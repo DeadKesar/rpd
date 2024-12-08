@@ -115,15 +115,23 @@ namespace DisciplineWorkProgram.Models
 
         private static string FindCell(IXLWorksheet worksheet, string target1, string target2, bool isRegex = false)
         {
-           
+               
                 foreach (var row in worksheet.RowsUsed())
                 {
                     foreach (var cell in row.CellsUsed())
                     {
                     if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
                     {
-                        var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
-                        foreach (var cellValue in range.CellsUsed())
+                        var mergedRange = cell.MergedRange() ?? cell.AsRange();
+                        var firstColumn = mergedRange.FirstCell().Address.ColumnLetter;
+                        var lastColumn = mergedRange.LastCell().Address.ColumnLetter;
+                        int startRow = mergedRange.LastCell().Address.RowNumber + 1;
+                        int endRow = worksheet.LastRowUsed().RowNumber();
+                        var searchRange = worksheet.Range($"{firstColumn}{startRow}:{lastColumn}{endRow}");
+
+
+                        //var range = worksheet.Range($"План!{cell.Address.ToString()}:{cell.CurrentRegion.ToString().Split(':')[1]}");
+                        foreach (var cellValue in searchRange.CellsUsed())
                         {
                             if (cellValue.GetValue<string>().Contains(target2, StringComparison.OrdinalIgnoreCase))
                             {
