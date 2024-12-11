@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using MessageBox.Avalonia.Enums;
 
 namespace DisciplineWorkProgram.ViewModels
 {
@@ -114,7 +115,23 @@ namespace DisciplineWorkProgram.ViewModels
 			}
 		}
 
-		private async static Task<string> ChangeFilePath()
+        public async Task ShowErrorAsync(string message)
+        {
+            var messageBox = MessageBox.Avalonia.MessageBoxManager
+                .GetMessageBoxCustomWindow(new MessageBoxCustomParams
+                {
+                    ContentTitle = "Ошибка",
+                    ContentMessage = message,
+                    Icon = Icon.Error,
+                    ButtonDefinitions = new[] { new ButtonDefinition { Name = "OK" } },
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                });
+
+            await messageBox.Show();
+        }
+
+
+        private async static Task<string> ChangeFilePath()
 		{
 			var dialog = new OpenFileDialog();
 			string[] result = null;

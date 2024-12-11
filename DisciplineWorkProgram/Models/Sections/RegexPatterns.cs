@@ -4,7 +4,7 @@ namespace DisciplineWorkProgram.Models.Sections
 {
 	public class RegexPatterns
 	{
-		//Наименование компетенции
+		//Наименование компетенции тут довольно сложный случай так как приходится учитывать много вариантов и ошибок.
 		public static readonly Regex CompetenceName = new Regex(@"^(УК-\d{1,2}.?(! )?(?!\d))|^(ОПК-\d{1,2}.?(! )?(?!\d))|^(ПК-\d{1,2}.?(! )?(?!\d))");
 		//Любая строка, содержащая в себе информацию о компетенции
 		public static readonly Regex Competence = new Regex(@"^(УК-\d)|^(ОПК-\d)|^(ПК-\d)");

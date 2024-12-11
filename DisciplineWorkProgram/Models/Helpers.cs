@@ -40,9 +40,26 @@ namespace DisciplineWorkProgram.Models
 
 					Parent = section
 				})
-				.ToDictionary(discipline => discipline.Name);
+                    .Aggregate(new Dictionary<string, Discipline>(), (dict, discipline) =>
+                    {
+                        string originalName = discipline.Name;
+                        string nameToUse = originalName;
+                        int counter = 2;
 
-			if (!disciplines.Any())
+                        // Пока ключ уже существует, добавляем суффикс
+                        while (dict.ContainsKey(nameToUse))
+                        {
+                            nameToUse = $"{originalName}{counter}";
+                            counter++;
+                        }
+
+                        // Добавляем дисциплину с уникальным именем
+                        dict[nameToUse] = discipline;
+
+                        return dict;
+                    });
+
+            if (!disciplines.Any())
 			{
 				disciplines = ExcelHelpers.GetRowsWithPlus(workbook.Worksheet(WorksheetName + "Свод"))
 					.Select(row => new Discipline
@@ -66,8 +83,25 @@ namespace DisciplineWorkProgram.Models
 
                         Parent = section
 					})
-					.ToDictionary(discipline => discipline.Name);
-			}
+                        .Aggregate(new Dictionary<string, Discipline>(), (dict, discipline) =>
+                        {
+                            string originalName = discipline.Name;
+                            string nameToUse = originalName;
+                            int counter = 2;
+
+                            // Пока ключ уже существует, добавляем суффикс
+                            while (dict.ContainsKey(nameToUse))
+                            {
+                                nameToUse = $"{originalName}{counter}";
+                                counter++;
+                            }
+
+                            // Добавляем дисциплину с уникальным именем
+                            dict[nameToUse] = discipline;
+
+                            return dict;
+                        });
+            }
 
 			return disciplines;
 		}
