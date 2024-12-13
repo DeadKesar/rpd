@@ -211,8 +211,30 @@ namespace DisciplineWorkProgram.Models.Sections
 		private void LoadCompetencies(WordprocessingDocument document)
 		{
 			var competencies = ParseCompetencies(document).ToArray();
-			//Составление набора ключей-компетенций
-			foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
+
+            var regex = new Regex(@"^(УК-\d+(\.\d+)*|ОПК-\d+(\.\d+)*|ПК-\d+(\.\d+)*)\b");
+            //Составление набора ключей-компетенций
+            foreach (var competency in competencies)
+            {
+                var match = regex.Match(competency);
+                if (match.Success)
+                {
+                    var key = match.Value;
+
+                    if (!Competencies.ContainsKey(key))
+                    {
+                        // Если ключа ещё нет, создаём новую компетенцию
+                        Competencies[key] = new Competence { Name = competency };
+                    }
+                    else
+                    {
+                        // Если ключ уже есть, добавляем строку в список компетенций
+                        Competencies[key].Competencies.Add(competency);
+                    }
+                }
+            }
+			/*
+			             foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
                 Competencies[
 					competency.Substring(
 						0,
@@ -227,7 +249,9 @@ namespace DisciplineWorkProgram.Models.Sections
             foreach (var competency in competencies.Where(text => !RegexPatterns.CompetenceName.IsMatch(text)))
 				Competencies[competency.Substring(0, competency.IndexOf('.'))]
 					.Competencies.Add(competency);
-		}
+			*/
+
+        }
 
 		public IEnumerable<string> GetCheckedDisciplinesNames =>
 			Disciplines

@@ -7,6 +7,7 @@ using static DisciplineWorkProgram.Word.Helpers.Ooxml;
 using static DisciplineWorkProgram.Word.Helpers.Tables;
 using DisciplineWorkProgram.Models.Sections;
 using DocumentFormat.OpenXml;
+using DisciplineWorkProgram.Models.Sections.Helpers;
 
 namespace DisciplineWorkProgram.Models
 {
@@ -27,10 +28,10 @@ namespace DisciplineWorkProgram.Models
 
 			WriteSectionData(bookmarkMap);
 			WriteDisciplineData(bookmarkMap, discipline);
-			WriteCompetenciesTable(bookmarkMap, discipline);
+			WriteCompetenciesTable(bookmarkMap, discipline); //заполняет табличку компетенций
 			WriteDisciplinePartitionTable(bookmarkMap, discipline);
 			WriteSemesters(bookmarkMap, discipline);
-			WriteCompetencies(bookmarkMap, discipline);
+			WriteCompetencies(bookmarkMap, discipline);//записываем компетенции в самом начале
 			WriteYear(bookmarkMap);
 			// Не реализовано занесение данных по дисциплине
 			WriteLaboriousnessTable(bookmarkMap, discipline);
@@ -89,12 +90,47 @@ namespace DisciplineWorkProgram.Models
 
 				var row = new TableRow();
 				row.AppendChild(GetTableCellByString(Section.Competencies[competence].Name));
-				row.AppendChild(GetTableCellByStrings(Section.Competencies[competence].Competencies));
-				table.AppendChild(row);
-			}
-		}
+                var relatedCompetencies = Section.Competencies
+					.Where(kvp => kvp.Key.StartsWith(competence + "."))
+					.ToList();
+                var cell = new TableCell();
 
-		private void WriteDisciplinePartitionTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+                var paragraph = new Paragraph();
+
+                foreach (var s in relatedCompetencies)
+                {
+                    // Добавляем текст в параграф
+                    paragraph.AppendChild(new Run(new Text(s.Value.Name)));
+                    // Добавляем перенос строки
+                    paragraph.AppendChild(new Run(new Break()));
+                }
+
+                // Убираем последний Break, если нужно
+                if (paragraph.LastChild is Run lastRun && lastRun.LastChild is Break)
+                {
+                    lastRun.RemoveChild(lastRun.LastChild);
+                }
+
+                // Создаём ячейку и добавляем в неё параграф
+                var tableCell = new TableCell(paragraph);
+                row.AppendChild(tableCell);
+
+                table.AppendChild(row);
+
+            }
+		}
+        /*foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
+                    Competencies[
+                        competency.Substring(
+                            0,
+                            competency.IndexOf('.') >= 0
+                                ? competency.IndexOf('.')
+                                : competency.IndexOf(' ') >= 0
+                                    ? competency.IndexOf(' ')
+                                    : competency.Length
+                        )
+                    ] = new Competence { Name = competency };*/
+        private void WriteDisciplinePartitionTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
 			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(discipline))
 				return;
@@ -118,12 +154,12 @@ namespace DisciplineWorkProgram.Models
 					));
 				row.Append(
 					GetTableCellsByStrings("",
+					Section.Disciplines[discipline].Details[semester].Lec.ToString(),
+                    Section.Disciplines[discipline].Details[semester].Lab.ToString(),
+                    Section.Disciplines[discipline].Details[semester].Pr.ToString(),
+                    Section.Disciplines[discipline].Details[semester].Ind.ToString(),
 					"",
-					"",
-					"",
-					"",
-					"",
-					""));
+                    Section.Disciplines[discipline].Details[semester].Monitoring.ToString()));
 
 				rows.Add(row);
 			}
