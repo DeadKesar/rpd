@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MessageBox.Avalonia.Enums;
+using System;
 
 namespace DisciplineWorkProgram.ViewModels
 {
@@ -105,15 +106,22 @@ namespace DisciplineWorkProgram.ViewModels
 
 		public void MakeDwps()
 		{
-			var section = SectionsByWayName.Single().Sections.Single();
-			//new Dwp(section)
-			//		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
-			foreach (var discipline in section.GetCheckedDisciplinesNames)
+			try
 			{
-				new Dwp(section)
-					.MakeDwp(TemplatePath, DwpDir, discipline);
+				var section = SectionsByWayName.Single().Sections.Single();
+				//new Dwp(section)
+				//		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
+				foreach (var discipline in section.GetCheckedDisciplinesNames)
+				{
+					new Dwp(section)
+						.MakeDwp(TemplatePath, DwpDir, discipline);
+				}
 			}
-		}
+            catch (Exception ex)
+            {
+                ShowErrorAsync(ex.Message); // Отображаем ошибку пользователю
+            }
+        }
 
         public async Task ShowErrorAsync(string message)
         {
@@ -158,22 +166,28 @@ namespace DisciplineWorkProgram.ViewModels
 			var section = new Section(CompListPath, CompMatrixPath);
 
 			using var plan = Excel.Converter.Convert(PlanPath);
+			try
+			{
+				// section.LoadDataFromPlan(plan);
+				section.LoadDataFromPlan(PlanPath);
+				section.LoadCompetenciesData();
 
-			// section.LoadDataFromPlan(plan);
-			section.LoadDataFromPlan(PlanPath);
-			section.LoadCompetenciesData();
+				// пережиток прошлого, легаси
+				// переход от списка планов к одному плану довольно трудоёмок, поэтому оставляю
+				// логику списка с всегда одним элементом
 
-			// пережиток прошлого, легаси
-			// переход от списка планов к одному плану довольно трудоёмок, поэтому оставляю
-			// логику списка с всегда одним элементом
-
-			SectionsByWayName.Clear();
-			SectionsByWayName.Add(
-				new SectionsByWay(section)
-				{
-					Name = section.SectionDictionary["WayName"]
-				});
-		}
+				SectionsByWayName.Clear();
+				SectionsByWayName.Add(
+					new SectionsByWay(section)
+					{
+						Name = section.SectionDictionary["WayName"]
+					});
+			}
+            catch (Exception ex)
+            {
+                ShowErrorAsync(ex.Message); // Отображаем ошибку пользователю
+            }
+        }
 
 		/// <summary>
 		/// legacy :D
