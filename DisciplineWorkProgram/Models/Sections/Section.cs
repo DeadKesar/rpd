@@ -149,7 +149,7 @@ namespace DisciplineWorkProgram.Models.Sections
 					.Concat(worksheet.RowsUsed().Where(row =>
 						row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация"))))
 				{
-					var discipline = row.Cell(FindColumn(worksheet, "Наименование", true)).GetString();
+					var discipline = row.Cell(FindColumn(worksheet, "Индекс", true)).GetString();
 					if (string.IsNullOrWhiteSpace(discipline))
 						discipline = row.Cell("E").GetString(); //вроде не актуально
 
@@ -233,23 +233,7 @@ namespace DisciplineWorkProgram.Models.Sections
                     }
                 }
             }
-			/*
-			             foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
-                Competencies[
-					competency.Substring(
-						0,
-						competency.IndexOf('.') >= 0
-							? competency.IndexOf('.')
-							: competency.IndexOf(' ') >= 0
-								? competency.IndexOf(' ')
-								: competency.Length
-					)
-				] = new Competence { Name = competency };
 
-            foreach (var competency in competencies.Where(text => !RegexPatterns.CompetenceName.IsMatch(text)))
-				Competencies[competency.Substring(0, competency.IndexOf('.'))]
-					.Competencies.Add(competency);
-			*/
 
         }
 

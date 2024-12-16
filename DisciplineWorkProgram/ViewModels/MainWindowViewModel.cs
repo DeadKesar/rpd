@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MessageBox.Avalonia.Enums;
 using System;
+using DisciplineWorkProgram.Excel;
 
 namespace DisciplineWorkProgram.ViewModels
 {
@@ -165,6 +166,14 @@ namespace DisciplineWorkProgram.ViewModels
 		{
 			var section = new Section(CompListPath, CompMatrixPath);
 
+			var ext = Path.GetExtension(PlanPath);
+			var outPath = "";
+
+            if (ext != ".xlsx")
+			{
+                Excel.Converter.Convert(PlanPath, out outPath);
+				PlanPath = outPath;
+            }
 			using var plan = Excel.Converter.Convert(PlanPath);
 			try
 			{

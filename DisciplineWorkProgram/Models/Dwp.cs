@@ -30,12 +30,15 @@ namespace DisciplineWorkProgram.Models
 			WriteDisciplineData(bookmarkMap, discipline);
 			WriteCompetenciesTable(bookmarkMap, discipline); //заполняет табличку компетенций
 			WriteDisciplinePartitionTable(bookmarkMap, discipline);
-			WriteSemesters(bookmarkMap, discipline);
+			WritePracticleClassTable(bookmarkMap, discipline);
+            WriteSemesters(bookmarkMap, discipline);
 			WriteCompetencies(bookmarkMap, discipline);//записываем компетенции в самом начале
 			WriteYear(bookmarkMap);
 			// Не реализовано занесение данных по дисциплине
 			WriteLaboriousnessTable(bookmarkMap, discipline);
-			SaveDoc(doc, dwpDir, discipline);
+			WriteLaboratiesClassTable(bookmarkMap, discipline);
+
+            SaveDoc(doc, dwpDir, Section.Disciplines[discipline].Name);
 			doc.Dispose();
 		}
 
@@ -68,23 +71,34 @@ namespace DisciplineWorkProgram.Models
 			foreach (var (key, bookmark) in bookmarkMap)
 			{
 				//Надежда на то, что понадобится нумерация в рамках только одноразрядного числа
-				var actualKey = key.Substring(0, key.Length - 1);
+					var actualKey = key.Substring(0, key.Length - 1);
 
-				if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
+				var d = Section.Disciplines[discipline].Props.ContainsKey(actualKey);
+				//кастыль. я пока не понял как правильно создать закладку чтобы она не ломала программу.
+				if (actualKey == "Discipline")
+				{
+                    if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
+                        FindElementsByBookmark<Text>(bookmark, 1)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = Section.Disciplines[discipline].Props["Name"];
+					continue;
+                }
+
+                if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
 					FindElementsByBookmark<Text>(bookmark, 1)
 						.First(elem => elem.Text.Contains("Autofill" + actualKey))
 						.Text = Section.Disciplines[discipline].Props[actualKey];
-			}
+				}
 		}
 
 		private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
-			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(discipline))
+			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
 				return;
 
 			var table = FindElementsByBookmark<Table>(bookmarkMap["CompetenciesTable1"], 2).First();
 
-			foreach (var competence in Section.DisciplineCompetencies[discipline])
+			foreach (var competence in Section.DisciplineCompetencies[Section.Disciplines[discipline].Name])
 			{
 				if (!Section.Competencies.ContainsKey(competence)) continue;
 
@@ -119,20 +133,10 @@ namespace DisciplineWorkProgram.Models
 
             }
 		}
-        /*foreach (var competency in competencies.Where(text => RegexPatterns.CompetenceName.IsMatch(text)))
-                    Competencies[
-                        competency.Substring(
-                            0,
-                            competency.IndexOf('.') >= 0
-                                ? competency.IndexOf('.')
-                                : competency.IndexOf(' ') >= 0
-                                    ? competency.IndexOf(' ')
-                                    : competency.Length
-                        )
-                    ] = new Competence { Name = competency };*/
+
         private void WriteDisciplinePartitionTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
-			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(discipline))
+			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
 				return;
 
 			var rows = new List<TableRow>();
@@ -199,7 +203,7 @@ namespace DisciplineWorkProgram.Models
 
 		private void WriteSemesters(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
-			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(discipline)) return;
+			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name)) return;
 
 			FindElementsByBookmark<Text>(bookmarkMap["Semester1"], 1)
 					.First(elem => elem.Text.Contains("Autofill" + "Semester"))
@@ -220,7 +224,7 @@ namespace DisciplineWorkProgram.Models
 
 		private void WriteCompetencies(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
-			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(discipline))
+			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
 				return;
 
 			var bookmarkElement = FindElementsByBookmark<Paragraph>(bookmarkMap["Competencies1"], 1).First();
@@ -228,7 +232,7 @@ namespace DisciplineWorkProgram.Models
 
 			foreach (var (name, classifier) in Section.CompetenceClassifiers)
 			{
-				if (!Section.DisciplineCompetencies[discipline].Any(competence => competence.StartsWith(name)))
+				if (!Section.DisciplineCompetencies[Section.Disciplines[discipline].Name].Any(competence => competence.StartsWith(name)))
 					continue;
 
 				var element = new Paragraph
@@ -250,7 +254,7 @@ namespace DisciplineWorkProgram.Models
 					});
 
 				var classifiedCompetencies = Section.Competencies
-					.Where(elem => Section.DisciplineCompetencies[discipline].Contains(elem.Key));
+					.Where(elem => Section.DisciplineCompetencies[Section.Disciplines[discipline].Name].Contains(elem.Key));
 
 				Text text = default;
 
@@ -318,7 +322,7 @@ namespace DisciplineWorkProgram.Models
 
 		private void WriteLaboriousnessTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
 		{
-			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(discipline))
+			if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
 				return;
 
 			var rows = FindElementsByBookmark<Table>(bookmarkMap["LaboriousnessTable1"], 2)
@@ -396,6 +400,75 @@ namespace DisciplineWorkProgram.Models
 				foreach (var row in rows.Skip(2))
 					row.AppendChild(GetTableCellByString(atAll[i++]));
 			}
-		}
-	}
+        }
+        //AutofillRequirements1
+        //AutofillPracticleClassTable1
+        //AutofillLaboratiesClassTable1
+
+
+        private void WritePracticleClassTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        {
+            if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
+                return;
+
+            // Создание строки таблицы с настройкой стилей для ячеек
+            var row = new TableRow(
+                GetStyledTableCell(""),
+                GetStyledTableCell(""),
+                GetStyledTableCell("Итого:", false, "Times New Roman", 12, JustificationValues.Left),
+                GetStyledTableCell(Section.Disciplines[discipline].Details.Values.Sum(details => details.Pr).ToString(), false, "Times New Roman", 12, JustificationValues.Center),
+                GetStyledTableCell(""));
+
+            // Находим таблицу и добавляем строку
+            FindElementsByBookmark<Table>(bookmarkMap["PracticleClassTable1"], 2)
+                .First()
+                .Append(row);
+        }
+        private void WriteLaboratiesClassTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        {
+            if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
+                return;
+
+            // Создание строки таблицы с настройкой стилей для ячеек
+            var row = new TableRow(
+                GetStyledTableCell(""),
+                GetStyledTableCell(""),
+                GetStyledTableCell("Итого:", false, "Times New Roman", 12, JustificationValues.Left),
+                GetStyledTableCell(Section.Disciplines[discipline].Details.Values.Sum(details => details.Lab).ToString(), false, "Times New Roman", 12, JustificationValues.Center),
+                GetStyledTableCell(""));
+
+            // Находим таблицу и добавляем строку
+            FindElementsByBookmark<Table>(bookmarkMap["LaboratiesClassTable1"], 2)
+                .First()
+                .Append(row);
+        }
+
+
+        // Вспомогательный метод для создания стилизованной ячейки
+        private TableCell GetStyledTableCell(string text, bool bold = false, string fontName = "Times New Roman", int fontSize = 12, JustificationValues justification = JustificationValues.Left)
+        {
+            var paragraph = new Paragraph
+            {
+                ParagraphProperties = new ParagraphProperties
+                {
+                    Justification = new Justification { Val = justification }, // Выравнивание текста
+                }
+            };
+
+            var run = new Run();
+            run.AppendChild(new Text(text));
+
+            run.RunProperties = new RunProperties
+            {
+                Bold = bold ? new Bold() : null, // Жирный шрифт
+                RunFonts = new RunFonts { Ascii = fontName, HighAnsi = fontName }, // Шрифт
+                FontSize = new FontSize { Val = (fontSize * 2).ToString() }, // Кегль (в Open XML размер указывается в полукеглях)
+            };
+
+            paragraph.AppendChild(run);
+
+            return new TableCell(paragraph);
+        }
+
+    }
 }

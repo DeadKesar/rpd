@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
@@ -13,8 +14,7 @@ namespace DisciplineWorkProgram.Excel
 		public static void Convert(string path, out string newPath)
 		{
 			newPath = GetConvertedFilePath(path);
-
-			if (!Directory.Exists(ConvertedFilesPath)) Directory.CreateDirectory(ConvertedFilesPath);
+            if (!Directory.Exists(ConvertedFilesPath)) Directory.CreateDirectory(ConvertedFilesPath);
 
 			ConvertXlsToXlsx(path).Write(File.Create(newPath));
 		}
@@ -23,14 +23,68 @@ namespace DisciplineWorkProgram.Excel
 		public static Stream Convert(string path)
 		{
 			var newPlan = new NpoiMemoryStream() { AllowClose = false };
+            var newPath = GetConvertedFilePath(path);
 
-			ConvertXlsToXlsx(path).Write(newPlan);
+            ConvertXlsToXlsx2(path).Write(newPlan);
 			newPlan.AllowClose = true;
 
 			return newPlan;
 		}
 
-		private static XSSFWorkbook ConvertXlsToXlsx(string path)
+        private static XSSFWorkbook ConvertXlsToXlsx(string path)
+        {
+            // Путь к исходному файлу
+            string xlsFilePath = path;
+			// Путь к файлу, в который будет конвертирован XLS
+			string xlsxFilePath = GetConvertedFilePath(path);
+
+
+                // Открываем старый Excel файл (.xls)
+                using (var fileStream = new FileStream(xlsFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    // Загружаем старый файл (.xls) с помощью HSSF (для .xls файлов)
+                    HSSFWorkbook hssfWorkbook = new HSSFWorkbook(fileStream);
+
+                    // Создаем новый Excel файл (.xlsx)
+                    XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+
+                    // Переносим все листы из старого файла в новый
+                    for (int i = 0; i < hssfWorkbook.NumberOfSheets; i++)
+                    {
+                        ISheet sheet = hssfWorkbook.GetSheetAt(i);
+                        ISheet newSheet = xssfWorkbook.CreateSheet(sheet.SheetName);
+
+                        // Копируем строки и ячейки
+                        for (int rowIndex = 0; rowIndex <= sheet.LastRowNum; rowIndex++)
+                        {
+                            IRow row = sheet.GetRow(rowIndex);
+                            if (row != null)
+                            {
+                                IRow newRow = newSheet.CreateRow(rowIndex);
+                                for (int cellIndex = 0; cellIndex < row.Cells.Count; cellIndex++)
+                                {
+                                    ICell cell = row.GetCell(cellIndex);
+                                    ICell newCell = newRow.CreateCell(cellIndex);
+
+                                    if (cell != null)
+                                    {
+                                        newCell.SetCellValue(cell.ToString());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                // Сохраняем новый файл (.xlsx)
+                using (var fs = new FileStream(xlsxFilePath, FileMode.Create, FileAccess.Write))
+                {
+                   xssfWorkbook.Write(fs);
+                }
+                return xssfWorkbook;
+                }
+            
+        }
+		
+        private static XSSFWorkbook ConvertXlsToXlsx2(string path)
 		{
 			using var inputStream = File.OpenRead(path);
 			// var workbookIn = new HSSFWorkbook(inputStream);
@@ -97,8 +151,10 @@ namespace DisciplineWorkProgram.Excel
 					return;
 			}
 		}
+		
 
-		private static string GetConvertedFilePath(string path) =>
-			Path.GetFullPath(ConvertedFilesPath + Path.GetFileNameWithoutExtension(path) + Extension);
+        private static string GetConvertedFilePath(string path) =>
+			Path.GetFullPath("dwp/" + Path.GetFileNameWithoutExtension(path) + Extension);
+		
 	}
 }

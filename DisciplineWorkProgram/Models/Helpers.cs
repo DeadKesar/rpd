@@ -21,7 +21,8 @@ namespace DisciplineWorkProgram.Models
             var disciplines = ExcelHelpers.GetRowsWithPlus(worksheet)
 				.Select(row => new Discipline
 				{
-					Name = row.Cell(FindCell(worksheet, "наименование")).GetString(), //C
+                    Ind = row.Cell(FindCell(worksheet, "индекс")).GetString(),
+                    Name = row.Cell(FindCell(worksheet, "наименование")).GetString(), //C
 					Department = row.Cell(FindCell(worksheet, "закрепленная кафедра", "наименование")).GetString(),
 					Exam = row.Cell(FindCell(worksheet, "[Э|э]?\\s*[K|к]\\s*[З|з]\\s*[А|а]\\s*[М|м]\\s*[Е|е]\\s*[Н|н]", true)).GetInt(),
 					Credit = row.Cell(FindCell(worksheet, "зачет")).GetInt(),
@@ -34,7 +35,7 @@ namespace DisciplineWorkProgram.Models
 					Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
 					Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
 					Pr = row.Cell(FindCell(worksheet, "^ср$", true)).GetInt(),
-					Ind = row.Cell(FindCell(worksheet, "индекс")).GetInt(),
+					
 					Control = row.Cell(FindCell(worksheet, "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
 					ZeAtAll = row.Cells(FindCell(worksheet, "Семестр 1"), FindCell(worksheet, "Семестр 8")).Sum(val => val.GetInt()),
 
@@ -42,7 +43,7 @@ namespace DisciplineWorkProgram.Models
 				})
                     .Aggregate(new Dictionary<string, Discipline>(), (dict, discipline) =>
                     {
-                        string originalName = discipline.Name;
+                        string originalName = discipline.Ind;
                         string nameToUse = originalName;
                         int counter = 2;
 
@@ -77,7 +78,7 @@ namespace DisciplineWorkProgram.Models
                         Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
                         Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
                         Pr = row.Cell(FindCell(worksheet, "^ср$", true)).GetInt(),
-                        Ind = row.Cell(FindCell(worksheet, "индекс")).GetInt(),
+                        Ind = row.Cell(FindCell(worksheet, "индекс")).GetText(),
                         Control = row.Cell(FindCell(worksheet, "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
                         ZeAtAll = row.Cells(FindCell(worksheet, "Семестр 1"), FindCell(worksheet, "Семестр 8")).Sum(val => val.GetInt()),
 
@@ -85,7 +86,7 @@ namespace DisciplineWorkProgram.Models
 					})
                         .Aggregate(new Dictionary<string, Discipline>(), (dict, discipline) =>
                         {
-                            string originalName = discipline.Name;
+                            string originalName = discipline.Ind;
                             string nameToUse = originalName;
                             int counter = 2;
 
@@ -102,6 +103,8 @@ namespace DisciplineWorkProgram.Models
                             return dict;
                         });
             }
+            //Возможно надо отфильтровать дисциплины. и убрать заголовки
+
 
 			return disciplines;
 		}

@@ -14,13 +14,27 @@ namespace DisciplineWorkProgram.Models
 		public IDictionary<string, string> Props { get; } = new Dictionary<string, string>();
 		//Семестр, детали работ
 		public IDictionary<int, DisciplineDetails> Details { get; } = new Dictionary<int, DisciplineDetails>();
-		public string Name
-		{
-			get => Props["Discipline"];
-			set => Props["Discipline"] = value;
-		}
 
-		public string Department
+        public string Ind
+        {
+            get => Props["Discipline"];
+            set => Props["Discipline"] = value;
+
+            //get => Props["Ind"];
+            //set => Props["Ind"] = value;
+            //get => Convert.ToInt32(Props["Ind"]);
+            //set => Props["Ind"] = value.ToString();
+        }
+        public string Name
+        {
+            get => Props["Name"];
+            set => Props["Name"] = value;
+
+            //get => Props["Discipline"];
+            //set => Props["Discipline"] = value;
+        }
+
+        public string Department
 		{
 			get => Props["Department"];
 			set => Props["Department"] = value;
@@ -88,12 +102,6 @@ namespace DisciplineWorkProgram.Models
 		{
 			get => Convert.ToInt32(Props["Pr"]);
 			set => Props["Pr"] = value.ToString();
-		}
-
-		public int Ind
-		{
-			get => Convert.ToInt32(Props["Ind"]);
-			set => Props["Ind"] = value.ToString();
 		}
 
 		public int Control
