@@ -107,6 +107,17 @@ namespace DisciplineWorkProgram.ViewModels
 
 		public void MakeDwps()
 		{
+
+#if DEBUG
+            var section = SectionsByWayName.Single().Sections.Single();
+            //new Dwp(section)
+            //		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
+            foreach (var discipline in section.GetCheckedDisciplinesNames)
+            {
+                new Dwp(section)
+                    .MakeDwp(TemplatePath, DwpDir, discipline);
+            }
+#else
 			try
 			{
 				var section = SectionsByWayName.Single().Sections.Single();
@@ -122,6 +133,7 @@ namespace DisciplineWorkProgram.ViewModels
             {
                 ShowErrorAsync(ex.Message); // Отображаем ошибку пользователю
             }
+#endif
         }
 
         public async Task ShowErrorAsync(string message)
@@ -175,8 +187,24 @@ namespace DisciplineWorkProgram.ViewModels
 				PlanPath = outPath;
             }
 			using var plan = Excel.Converter.Convert(PlanPath);
+#if DEBUG
+            section.LoadDataFromPlan(PlanPath);
+            section.LoadCompetenciesData();
+
+            // пережиток прошлого, легаси
+            // переход от списка планов к одному плану довольно трудоёмок, поэтому оставляю
+            // логику списка с всегда одним элементом
+
+            SectionsByWayName.Clear();
+            SectionsByWayName.Add(
+                new SectionsByWay(section)
+                {
+                    Name = section.SectionDictionary["WayName"]
+                });
+
+#else
 			try
-			{
+            {
 				// section.LoadDataFromPlan(plan);
 				section.LoadDataFromPlan(PlanPath);
 				section.LoadCompetenciesData();
@@ -196,6 +224,7 @@ namespace DisciplineWorkProgram.ViewModels
             {
                 ShowErrorAsync(ex.Message); // Отображаем ошибку пользователю
             }
+#endif
         }
 
 		/// <summary>

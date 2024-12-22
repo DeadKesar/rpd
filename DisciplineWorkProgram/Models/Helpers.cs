@@ -30,8 +30,8 @@ namespace DisciplineWorkProgram.Models
 					Kp = row.Cell(FindCell(worksheet, "^кп$",true)).GetInt(),
 					Kr = row.Cell(FindCell(worksheet, "^кр$", true)).GetInt(),
 					Fact = row.Cell(FindCell(worksheet, "факт")).GetInt(),
-					ByPlan = row.Cell(FindCell(worksheet, "По плану")).GetInt(),
-					ContactHours = row.Cell(FindCell(worksheet, "Конт. раб.")).GetInt(),
+                    ByPlan = row.Cell(FindCellOr(worksheet, "[П|п]?\\s*[О|о]\\s*[П|п]\\s*[Л|л]\\s*[А|а]\\s*[Н|н]s*[У|у]", "[Э|э]?\\s*[K|к]\\s*[С|с]\\s*[П|п]\\s*[Е|е]\\s*[Р|р]\\s*[Т|т]\\s*[Н|н]\\s*[О|о]\\s*[Е|е]", true)).GetInt(), //экспертное
+                    ContactHours = row.Cell(FindCell(worksheet, "Конт. раб.")).GetInt(),
 					Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
 					Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
 					Pr = row.Cell(FindCell(worksheet, "^ср$", true)).GetInt(),
@@ -73,7 +73,7 @@ namespace DisciplineWorkProgram.Models
                         Kp = row.Cell(FindCell(worksheet, "^кп$", true)).GetInt(),
                         Kr = row.Cell(FindCell(worksheet, "^кр$", true)).GetInt(),
                         Fact = row.Cell(FindCell(worksheet, "факт")).GetInt(),
-                        ByPlan = row.Cell(FindCell(worksheet, "По плану")).GetInt(),
+                        ByPlan = row.Cell(FindCellOr(worksheet, "[П|п]?\\s*[О|о]\\s*[П|п]\\s*[Л|л]\\s*[А|а]\\s*[Н|н]s*[У|у]", "[Э|э]?\\s*[K|к]\\s*[С|с]\\s*[П|п]\\s*[Е|е]\\s*[Р|р]\\s*[Т|т]\\s*[Н|н]\\s*[О|о]\\s*[Е|е]", true)).GetInt(), //экспертное
                         ContactHours = row.Cell(FindCell(worksheet, "Конт. раб.")).GetInt(),
                         Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
                         Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
@@ -178,7 +178,61 @@ namespace DisciplineWorkProgram.Models
                         }
                     }
                 }
-                throw new Exception($"Нет поля {target1} в документе {worksheet.Name}");
+                throw new Exception($"Нет поля {target1}, или {target2} в документе {worksheet.Name}");
+        }
+
+        private static string FindCellOr(IXLWorksheet worksheet, string target1, string target2, bool isRegex = false)
+        {
+            if (isRegex)
+            {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        string cellValue = cell.GetValue<string>();
+                        if (Regex.IsMatch(cellValue, target1, RegexOptions.IgnoreCase))
+                        {
+                            return cell.Address.ColumnLetter.ToString();
+                        }
+                    }
+                }
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        string cellValue = cell.GetValue<string>();
+                        if (Regex.IsMatch(cellValue, target2, RegexOptions.IgnoreCase))
+                        {
+                            return cell.Address.ColumnLetter.ToString();
+                        }
+                    }
+                }
+                throw new Exception($"Нет поля {target1}, или {target2} в документе {worksheet.Name}");
+            }
+            else
+            {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        if (cell.GetValue<string>().Contains(target1, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return cell.Address.ColumnLetter.ToString();
+                        }
+                    }
+                }
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        if (cell.GetValue<string>().Contains(target2, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return cell.Address.ColumnLetter.ToString();
+                        }
+                    }
+                }
+                throw new Exception($"Нет поля {target1}, или {target2} в документе {worksheet.Name}");
+            }
         }
     }
 }
