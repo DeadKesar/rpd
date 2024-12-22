@@ -132,7 +132,7 @@ namespace DisciplineWorkProgram.Models.Sections
 			SectionDictionary["WaySection"] = matches[1].Value; //Профиль
 			SectionDictionary["EducationForm"] = worksheet.Cell(FindCell(worksheet, "форма обучения")).Value.ToString().Replace("Форма обучения: ", "");
 
-			Disciplines = DisciplineWorkProgram.Models.Helpers.GetDisciplines(workbook, this);
+			Disciplines = DisciplineWorkProgram.Models.Helpers.GetDisciplines(workbook, this, SectionDictionary["EducationLevel"]);
 			LoadDetailedDisciplineData(workbook);
 		}
 

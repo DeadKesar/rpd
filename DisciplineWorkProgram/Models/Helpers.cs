@@ -13,9 +13,32 @@ namespace DisciplineWorkProgram.Models
 	{
 		private const string WorksheetName = "План";
 
-		public static IDictionary<string, Discipline> GetDisciplines(IXLWorkbook workbook, HierarchicalCheckableElement section)
+		public static IDictionary<string, Discipline> GetDisciplines(IXLWorkbook workbook, HierarchicalCheckableElement section, string EducationLevel)
 		{
-            
+            int semMax = 0;
+            switch (EducationLevel)
+            {
+                case "Бакалавриат":
+                    {
+                        semMax = 8;
+                        break;
+                    }
+                case "Магистратура":
+                    {
+                        semMax = 4;
+                        break;
+                    }
+                case "Аспирантура":
+                    {
+                        semMax = 6;
+                        break;
+                    }
+                default:
+                    {
+                        semMax = 8;
+                        break;
+                    }
+            }
 
             var worksheet = workbook.Worksheet(WorksheetName);
             var disciplines = ExcelHelpers.GetRowsWithPlus(worksheet)
@@ -37,7 +60,7 @@ namespace DisciplineWorkProgram.Models
 					Pr = row.Cell(FindCell(worksheet, "^ср$", true)).GetInt(),
 					
 					Control = row.Cell(FindCell(worksheet, "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
-					ZeAtAll = row.Cells(FindCell(worksheet, "Семестр 1"), FindCell(worksheet, "Семестр 8")).Sum(val => val.GetInt()),
+					ZeAtAll = row.Cells(FindCell(worksheet, "Семестр 1"), FindCell(worksheet, $"Семестр {semMax}")).Sum(val => val.GetInt()),
 
 					Parent = section
 				})
