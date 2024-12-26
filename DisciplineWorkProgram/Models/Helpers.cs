@@ -41,6 +41,15 @@ namespace DisciplineWorkProgram.Models
             }
 
             var worksheet = workbook.Worksheet(WorksheetName);
+            string[] forFactandByPlan = new string[2];
+            bool isSpec = false;
+            if (EducationLevel == "Специалитет")
+            {
+                isSpec = true;
+                forFactandByPlan = FindTwoCell(worksheet, "[Э|э]?\\s*[K|к]\\s*[С|с]\\s*[П|п]\\s*[Е|е]\\s*[Р|р]\\s*[Т|т]\\s*[Н|н]\\s*[О|о]\\s*[Е|е]", true);
+
+            }
+
             var disciplines = ExcelHelpers.GetRowsWithPlus(worksheet)
 				.Select(row => new Discipline
 				{
@@ -52,8 +61,8 @@ namespace DisciplineWorkProgram.Models
 					CreditWithRating = row.Cell(FindCell(worksheet, "зачет с оц")).GetInt(),
 					Kp = row.Cell(FindCell(worksheet, "^кп$",true)).GetInt(),
 					Kr = row.Cell(FindCell(worksheet, "^кр$", true)).GetInt(),
-					Fact = row.Cell(FindCell(worksheet, "факт")).GetInt(),
-                    ByPlan = row.Cell(FindCellOr(worksheet, "[П|п]?\\s*[О|о]\\s*[П|п]\\s*[Л|л]\\s*[А|а]\\s*[Н|н]s*[У|у]", "[Э|э]?\\s*[K|к]\\s*[С|с]\\s*[П|п]\\s*[Е|е]\\s*[Р|р]\\s*[Т|т]\\s*[Н|н]\\s*[О|о]\\s*[Е|е]", true)).GetInt(), //экспертное
+					Fact = row.Cell(isSpec ? forFactandByPlan[0] : FindCell(worksheet, "факт")).GetInt(),
+                    ByPlan = row.Cell(isSpec ? forFactandByPlan[1] : FindCellOr(worksheet, "[П|п]?\\s*[О|о]\\s*[П|п]\\s*[Л|л]\\s*[А|а]\\s*[Н|н]s*[У|у]", "[Э|э]?\\s*[K|к]\\s*[С|с]\\s*[П|п]\\s*[Е|е]\\s*[Р|р]\\s*[Т|т]\\s*[Н|н]\\s*[О|о]\\s*[Е|е]", true)).GetInt(), //экспертное
                     ContactHours = row.Cell(FindCell(worksheet, "Конт. раб.")).GetInt(),
 					Lec = row.Cell(FindCell(worksheet, "Лаб")).GetInt(),
 					Lab = row.Cell(FindCell(worksheet, "^пр$", true)).GetInt(),
@@ -255,6 +264,43 @@ namespace DisciplineWorkProgram.Models
                     }
                 }
                 throw new Exception($"Нет поля {target1}, или {target2} в документе {worksheet.Name}");
+            }
+        }
+        private static string[] FindTwoCell(IXLWorksheet worksheet, string target, bool isRegex = false)
+        {
+            string[] answ = new string[2];
+            int count = 0;
+            if (isRegex)
+            {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        string cellValue = cell.GetValue<string>();
+                        if (Regex.IsMatch(cellValue, target, RegexOptions.IgnoreCase))
+                        {
+                            answ[count++] = cell.Address.ColumnLetter.ToString();
+                            if (count == 2) { return answ; }
+
+                        }
+                    }
+                }
+                throw new Exception($"Нет ПАТЕРНА {target} в документе в количестве 2-ух штук.");
+            }
+            else
+            {
+                foreach (var row in worksheet.RowsUsed())
+                {
+                    foreach (var cell in row.CellsUsed())
+                    {
+                        if (cell.GetValue<string>().Contains(target, StringComparison.OrdinalIgnoreCase))
+                        {
+                            answ[count++] = cell.Address.ToString();
+                            if (count == 2) { return answ; }
+                        }
+                    }
+                }
+                throw new Exception($"Нет поля {target} в документе");
             }
         }
     }

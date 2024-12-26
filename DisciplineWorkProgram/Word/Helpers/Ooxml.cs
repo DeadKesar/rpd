@@ -3,15 +3,25 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentFormat.OpenXml;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+
+using System;
 
 namespace DisciplineWorkProgram.Word.Helpers
 {
     public static class Ooxml
     {
-        public static IEnumerable<T> FindElementsByBookmark<T>(BookmarkStart bookmarkStart, uint outerLevels) where T : OpenXmlElement
+        public static IEnumerable<T> FindElementsByBookmark<T>(BookmarkStart bookmarkStart, uint outerLevels, WordprocessingDocument doc) where T : OpenXmlElement
         {
             var elements = new List<T>();
             var elem = bookmarkStart.NextSibling();
+
+            if (elem == null)
+            {
+                var temp =  FindElementsByBookmark2<T>(doc, bookmarkStart);
+                return temp;
+            }
+
 
             while (elem != null)
             {
@@ -52,7 +62,7 @@ namespace DisciplineWorkProgram.Word.Helpers
             return elements;
         }
 
-        public static IDictionary<string, BookmarkStart> GetBookmarks(WordprocessingDocument doc, string bookmarkStartName)
+        public static IDictionary<string, BookmarkStart> GetBookmarks(WordprocessingDocument doc, string bookmarkStartName) 
         {
             var bookmarkMap = new Dictionary<string, BookmarkStart>();
 
@@ -72,5 +82,83 @@ namespace DisciplineWorkProgram.Word.Helpers
                 Directory.CreateDirectory(dir);
             doc.SaveAs($"{dir}/{name}.docx");
         }
+
+        public static IEnumerable<T> FindElementsByBookmark2<T>(WordprocessingDocument doc, BookmarkStart bookmarkStart) where T : OpenXmlElement
+        {
+            var body = doc.MainDocumentPart.Document.Body;
+            var elements = new List<T>();
+
+            // Ищем соответствующий BookmarkEnd по ID
+            var bookmarkStartTemp = body.Descendants<BookmarkStart>()
+                                  .FirstOrDefault(bs => bs.Id == bookmarkStart.Id);
+
+            var bookmarkEnd = body.Descendants<BookmarkEnd>()
+                                  .FirstOrDefault(be => be.Id == bookmarkStart.Id);
+            if(bookmarkStartTemp == null)
+                throw new Exception($"Не найдено начало закладки для ID {bookmarkStart.Id}");
+            if (bookmarkEnd == null)
+                throw new Exception($"Не найден конец закладки для ID {bookmarkStart.Id}");
+
+            // Добавляем все элементы между BookmarkStart и BookmarkEnd
+            bool isInsideBookmark = false;
+
+            foreach (var element in body.Descendants())
+            {
+                // Начинаем сбор, как только найдём BookmarkStart
+                if (element == bookmarkStartTemp)
+                {
+                    isInsideBookmark = true;
+                    continue;
+                }
+
+                // Прекращаем сбор при нахождении BookmarkEnd
+                if (element == bookmarkEnd)
+                    break;
+
+                if (isInsideBookmark)
+                    if (element is T typedElement)
+                    {
+                        elements.Add(typedElement);
+                    }
+            }
+
+            return elements;
+        }
+
+
+
+        /*public static IEnumerable<OpenXmlElement> FindElementsByBookmark2(BookmarkStart bookmarkStart)
+        {
+            // Получаем родительский контейнер
+            var parent = bookmarkStart.Parent;
+            var elements = new List<OpenXmlElement>();
+
+            // Ищем все элементы после BookmarkStart
+            var found = false;
+
+            foreach (var child in parent.ChildElements)
+            {
+                if (child == bookmarkStart)
+                {
+                    found = true;
+                    continue;
+                }
+
+                if (found)
+                {
+                    // Если встретили BookmarkEnd — завершаем поиск
+                    if (child is BookmarkEnd bookmarkEnd && bookmarkEnd.Id == bookmarkStart.Id)
+                        break;
+
+                    elements.Add(child);
+                }
+            }
+
+            return elements;
+        }*/
+
     }
+
+
+
 }

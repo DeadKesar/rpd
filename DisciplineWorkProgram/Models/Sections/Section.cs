@@ -122,16 +122,31 @@ namespace DisciplineWorkProgram.Models.Sections
 						SectionDictionary["EducationLevel"] = "Аспирантура";
 						break;
 					}
-				default:
+				case "специалист":
+					{
+                        SectionDictionary["EducationLevel"] = "Специалитет";
+                        break;
+                    }
+
+                default:
 					break;
 			}
-			SectionDictionary["WayCode"] = worksheet.Cell(FindCell(worksheet, "\\d\\d.\\d\\d.\\d\\d$", true)).Value.ToString();
-			//B18 - сложная строка, требуется разложение
-			var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell(FindCell(worksheet, "направление подготовки")).Value.ToString());
-			SectionDictionary["WayName"] = matches[0].Value;
-			SectionDictionary["WaySection"] = matches[1].Value; //Профиль
-			SectionDictionary["EducationForm"] = worksheet.Cell(FindCell(worksheet, "форма обучения")).Value.ToString().Replace("Форма обучения: ", "");
+            SectionDictionary["WayCode"] = worksheet.Cell(FindCell(worksheet, "\\d\\d.\\d\\d.\\d\\d$", true)).Value.ToString();
+            SectionDictionary["EducationForm"] = worksheet.Cell(FindCell(worksheet, "форма обучения")).Value.ToString().Replace("Форма обучения: ", "");
 
+            if (SectionDictionary["EducationLevel"] == "Специалитет")
+			{
+                SectionDictionary["WayName"] = worksheet.Cell(FindCell(worksheet, "Специальность:", false)).Value.ToString().Replace("Специальность:", "").Trim();
+				SectionDictionary["WaySection"] = worksheet.Cell(FindTwoCell(worksheet, "Специализация", false)[1]).Value.ToString();
+            }
+			else
+			{
+				//B18 - сложная строка, требуется разложение
+				var matches = RegexPatterns.WayNameSection.Matches(worksheet.Cell(FindCell(worksheet, "направление подготовки")).Value.ToString());
+				SectionDictionary["WayName"] = matches[0].Value;
+				SectionDictionary["WaySection"] = matches[1].Value; //Профиль
+				
+			}
 			Disciplines = DisciplineWorkProgram.Models.Helpers.GetDisciplines(workbook, this, SectionDictionary["EducationLevel"]);
 			LoadDetailedDisciplineData(workbook);
 		}
@@ -157,8 +172,9 @@ namespace DisciplineWorkProgram.Models.Sections
 					//Изменить на трайпарс после дебага
 					
 					string[] semestrs = FindTwoCell(worksheet, "семестр");
-					var semester =
-						int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value);
+					var semester = 0;
+					bool isGood = int.TryParse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value, out semester);
+					if (!isGood) semester = ((cur + 1)) * 2;
 					string[] academChas = FindTwoCell(worksheet, "Академических");
 
 					
@@ -187,10 +203,11 @@ namespace DisciplineWorkProgram.Models.Sections
 
 					if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
 						Disciplines[discipline].Details.Add(semester, details);
-					//to do: заменить на поиск по странице.
-					semester = int.Parse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[1]).GetString()).Value);
+                    //to do: заменить на поиск по странице.
+                    isGood = int.TryParse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value, out semester);
+                    if (!isGood) semester = ((cur + 1)) * 2 + 1;
 
-					details = new DisciplineDetails
+                    details = new DisciplineDetails
 					{
                         Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
                         Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),

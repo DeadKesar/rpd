@@ -29,24 +29,24 @@ namespace DisciplineWorkProgram.Models
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
             var bookmarkMap = GetBookmarks(doc, "Autofill");
 
-            WriteSectionData(bookmarkMap);
-            WriteDisciplineData(bookmarkMap, discipline);
-            WriteRequirements(bookmarkMap, discipline);
-            WriteCompetenciesTable(bookmarkMap, discipline); //заполняет табличку компетенций
-            WriteDisciplinePartitionTable(bookmarkMap, discipline);
-            WritePracticleClassTable(bookmarkMap, discipline);
-            WriteSemesters(bookmarkMap, discipline);
-            WriteCompetencies(bookmarkMap, discipline);//записываем компетенции в самом начале
-            WriteYear(bookmarkMap);
+            WriteSectionData(bookmarkMap, doc);
+            WriteDisciplineData(bookmarkMap, discipline, doc);
+            WriteRequirements(bookmarkMap, discipline, doc);
+            WriteCompetenciesTable(bookmarkMap, discipline, doc); //заполняет табличку компетенций
+            WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
+            WritePracticleClassTable(bookmarkMap, discipline, doc);
+            WriteSemesters(bookmarkMap, discipline, doc);
+            WriteCompetencies(bookmarkMap, discipline, doc);//записываем компетенции в самом начале
+            WriteYear(bookmarkMap, doc);
             // Не реализовано занесение данных по дисциплине
-            WriteLaboriousnessTable(bookmarkMap, discipline);
-            WriteLaboratiesClassTable(bookmarkMap, discipline);
+            WriteLaboriousnessTable(bookmarkMap, discipline, doc);
+            WriteLaboratiesClassTable(bookmarkMap, discipline, doc);
 
             SaveDoc(doc, dwpDir, Section.Disciplines[discipline].Name);
             doc.Dispose();
         }
 
-        private void WriteSectionData(IDictionary<string, BookmarkStart> bookmarkMap)
+        private void WriteSectionData(IDictionary<string, BookmarkStart> bookmarkMap, WordprocessingDocument doc)
         {
             foreach (var (key, bookmark) in bookmarkMap)
             {
@@ -55,7 +55,7 @@ namespace DisciplineWorkProgram.Models
                 try
                 {
                     if (Section.SectionDictionary.ContainsKey(actualKey))
-                        FindElementsByBookmark<Text>(bookmark, 1)
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
                             .First(elem => elem.Text.Contains("Autofill" + actualKey))
                             .Text = Section.SectionDictionary[actualKey];
                 }
@@ -67,11 +67,12 @@ namespace DisciplineWorkProgram.Models
             }
         }
 
-        private void WriteDisciplineData(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteDisciplineData(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline))
                 return;
 
+            int countForPartFormForPartners = 0;
             foreach (var (key, bookmark) in bookmarkMap)
             {
                 //Надежда на то, что понадобится нумерация в рамках только одноразрядного числа
@@ -82,7 +83,7 @@ namespace DisciplineWorkProgram.Models
                 if (actualKey == "Discipline")
                 {
                     if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
-                        FindElementsByBookmark<Text>(bookmark, 1)
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
                             .First(elem => elem.Text.Contains("Autofill" + actualKey))
                             .Text = Section.Disciplines[discipline].Props["Name"];
                     continue;
@@ -93,25 +94,31 @@ namespace DisciplineWorkProgram.Models
 
                 if (actualKey == "PartType")
                 {
-                    FindElementsByBookmark<Text>(bookmark, 1)
-                        .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                        .Text = Regex.IsMatch(discipline, @".О.") ? "Обязательная часть." : "Часть, формируемая участниками образовательных отношений.";
+                    if (countForPartFormForPartners == 0)
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = Regex.IsMatch(discipline, @".О.") ? "Обязательная часть." : "Часть, формируемая участниками образовательных отношений.";
+                    else
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = Regex.IsMatch(discipline, @".О.") ? "обязательной части" : "части, формируемой участниками образовательных отношений";
+                    countForPartFormForPartners++;
                     continue;
                 }
 
                 if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
-                    FindElementsByBookmark<Text>(bookmark, 1)
+                    FindElementsByBookmark<Text>(bookmark, 1, doc)
                         .First(elem => elem.Text.Contains("Autofill" + actualKey))
                         .Text = Section.Disciplines[discipline].Props[actualKey];
             }
         }
 
-        private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
-
-            var table = FindElementsByBookmark<Table>(bookmarkMap["CompetenciesTable1"], 2).First();
+            //AutofillCompetenciesTable1
+            var table = FindElementsByBookmark<Table>(bookmarkMap["CompetenciesTable1"], 2, doc).First();
 
             foreach (var competence in Section.DisciplineCompetencies[Section.Disciplines[discipline].Name])
             {
@@ -149,7 +156,7 @@ namespace DisciplineWorkProgram.Models
             }
         }
 
-        private void WriteDisciplinePartitionTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteDisciplinePartitionTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
@@ -211,16 +218,16 @@ namespace DisciplineWorkProgram.Models
                             elem.Key == Section.Disciplines[discipline].Details.Keys.Max())
                         .Value?.Monitoring ?? "НЕТ")));
 
-            FindElementsByBookmark<Table>(bookmarkMap["DisciplinePartitionTable1"], 2)
+            FindElementsByBookmark<Table>(bookmarkMap["DisciplinePartitionTable1"], 2, doc)
                 .First()
                 .Append(rows);
         }
 
-        private void WriteSemesters(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteSemesters(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name)) return;
 
-            FindElementsByBookmark<Text>(bookmarkMap["Semester1"], 1)
+            FindElementsByBookmark<Text>(bookmarkMap["Semester1"], 1, doc)
                     .First(elem => elem.Text.Contains("Autofill" + "Semester"))
                     .Text = Section.Disciplines[discipline].Details.Keys.Any()
                         ? Section.Disciplines[discipline].Details.Keys
@@ -237,12 +244,12 @@ namespace DisciplineWorkProgram.Models
             */
         }
 
-        private void WriteCompetencies(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteCompetencies(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
 
-            var bookmarkElement = FindElementsByBookmark<Paragraph>(bookmarkMap["Competencies1"], 1).First();
+            var bookmarkElement = FindElementsByBookmark<Paragraph>(bookmarkMap["Competencies1"], 1, doc).First();
             var currentElement = bookmarkElement;
 
             foreach (var (name, classifier) in Section.CompetenceClassifiers)
@@ -330,17 +337,17 @@ namespace DisciplineWorkProgram.Models
             bookmarkElement.Remove();
         }
 
-        private void WriteYear(IDictionary<string, BookmarkStart> bookmarkMap) =>
-            FindElementsByBookmark<Text>(bookmarkMap["Year1"], 1)
+        private void WriteYear(IDictionary<string, BookmarkStart> bookmarkMap, WordprocessingDocument doc) =>
+            FindElementsByBookmark<Text>(bookmarkMap["Year1"], 1, doc)
                 .First(elem => elem.Text.Contains("AutofillYear"))
                 .Text = DateTime.Today.Year.ToString();
 
-        private void WriteLaboriousnessTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteLaboriousnessTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
 
-            var rows = FindElementsByBookmark<Table>(bookmarkMap["LaboriousnessTable1"], 2)
+            var rows = FindElementsByBookmark<Table>(bookmarkMap["LaboriousnessTable1"], 2, doc)
                 .First()
                 .Elements<TableRow>()
                 .ToArray();
@@ -420,7 +427,7 @@ namespace DisciplineWorkProgram.Models
         //AutofillPracticleClassTable1
         //AutofillLaboratiesClassTable1
 
-        private void WritePracticleClassTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WritePracticleClassTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
@@ -434,11 +441,11 @@ namespace DisciplineWorkProgram.Models
                 GetStyledTableCell(""));
 
             // Находим таблицу и добавляем строку
-            FindElementsByBookmark<Table>(bookmarkMap["PracticleClassTable1"], 2)
+            FindElementsByBookmark<Table>(bookmarkMap["PracticleClassTable1"], 2, doc)
                 .First()
                 .Append(row);
         }
-        private void WriteLaboratiesClassTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteLaboratiesClassTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
@@ -452,7 +459,7 @@ namespace DisciplineWorkProgram.Models
                 GetStyledTableCell(""));
 
             // Находим таблицу и добавляем строку
-            FindElementsByBookmark<Table>(bookmarkMap["LaboratiesClassTable1"], 2)
+            FindElementsByBookmark<Table>(bookmarkMap["LaboratiesClassTable1"], 2, doc)
                 .First()
                 .Append(row);
         }
@@ -487,13 +494,13 @@ namespace DisciplineWorkProgram.Models
         //AutofillRequirementsLast
         //AutofillRequirementsNext
 
-        private void WriteRequirements(IDictionary<string, BookmarkStart> bookmarkMap, string discipline)
+        private void WriteRequirements(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
 
-            var bookmarkElement1 = FindElementsByBookmark<Paragraph>(bookmarkMap["RequirementsLast1"], 1).First();
-            var bookmarkElement2 = FindElementsByBookmark<Paragraph>(bookmarkMap["RequirementsNext1"], 1).First();
+            var bookmarkElement1 = FindElementsByBookmark<Paragraph>(bookmarkMap["RequirementsLast1"], 1, doc).First();
+            var bookmarkElement2 = FindElementsByBookmark<Paragraph>(bookmarkMap["RequirementsNext1"], 1, doc).First();
             var lastElement = bookmarkElement1;
             var nextElement = bookmarkElement2;
             var semesters = Section.Disciplines[discipline].Details.Keys;
