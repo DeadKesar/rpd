@@ -6,24 +6,24 @@ using System.Text.Unicode;
 
 namespace DisciplineWorkProgram.Extensions
 {
-	public static class ObjectExtensions
-	{
-		public static bool TryJsonSerialize(this object obj)
-		{
-			try
-			{
-				File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/log.json",
-					JsonSerializer.Serialize(obj, new JsonSerializerOptions
-					{
-						Encoder = JavaScriptEncoder.Create(UnicodeRanges.Cyrillic, UnicodeRanges.BasicLatin),
-						WriteIndented = true
-					}));
-				return true;
-			}
-			catch
-			{
-				return false;
-			}
-		}
-	}
+    public static class ObjectExtensions
+    {
+        public static bool TryJsonSerialize(this object obj)
+        {
+            try
+            {
+                File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "/log.json",
+                    JsonSerializer.Serialize(obj, new JsonSerializerOptions
+                    {
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.Cyrillic, UnicodeRanges.BasicLatin),
+                        WriteIndented = true
+                    }));
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 }

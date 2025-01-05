@@ -25,7 +25,7 @@ namespace DisciplineWorkProgram.Models
         //Должно обрабатывать только 1 дисциплину, чтобы "масштабировать" без доп. кода
         public void MakeDwp(string templatePath, string dwpDir, string discipline)
         {
-  
+
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
             var bookmarkMap = GetBookmarks(doc, "Autofill");
 
@@ -466,13 +466,19 @@ namespace DisciplineWorkProgram.Models
 
 
         // Вспомогательный метод для создания стилизованной ячейки
-        private TableCell GetStyledTableCell(string text, bool bold = false, string fontName = "Times New Roman", int fontSize = 12, JustificationValues justification = JustificationValues.Left)
+        private TableCell GetStyledTableCell(
+            string text,
+            bool bold = false,
+            string fontName = "Times New Roman",
+            int fontSize = 12,
+              JustificationValues? justification = null)
         {
+            justification ??= JustificationValues.Left;
             var paragraph = new Paragraph
             {
                 ParagraphProperties = new ParagraphProperties
                 {
-                    Justification = new Justification { Val = justification }, // Выравнивание текста
+                    Justification = new Justification { Val = justification },
                 }
             };
 
@@ -481,13 +487,12 @@ namespace DisciplineWorkProgram.Models
 
             run.RunProperties = new RunProperties
             {
-                Bold = bold ? new Bold() : null, // Жирный шрифт
-                RunFonts = new RunFonts { Ascii = fontName, HighAnsi = fontName }, // Шрифт
-                FontSize = new FontSize { Val = (fontSize * 2).ToString() }, // Кегль (в Open XML размер указывается в полукеглях)
+                Bold = bold ? new Bold() : null,
+                RunFonts = new RunFonts { Ascii = fontName, HighAnsi = fontName },
+                FontSize = new FontSize { Val = (fontSize * 2).ToString() },
             };
 
             paragraph.AppendChild(run);
-
             return new TableCell(paragraph);
         }
 
@@ -505,10 +510,10 @@ namespace DisciplineWorkProgram.Models
             var nextElement = bookmarkElement2;
             var semesters = Section.Disciplines[discipline].Details.Keys;
 
-            
 
 
-            foreach ( var elem in Section.Disciplines)
+
+            foreach (var elem in Section.Disciplines)
             {
                 if (elem.Value.Details.Keys.Count < 1 || semesters.Count < 1)
                     continue;
@@ -561,7 +566,7 @@ namespace DisciplineWorkProgram.Models
                 }
                 else
                 {
-                     
+
                     var text = new Text(temp.ToString()) { Space = SpaceProcessingModeValues.Preserve };
 
                     var element2 = new Paragraph

@@ -15,30 +15,32 @@
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5, 5, 5, 0">
           <Button Command="{Binding ChangePlanPath}" Width="300" Content="Выбрать план"  />
-          <TextBox Text="{Binding PlanPath}" Width="300" />
+          <TextBox Text="{Binding PlanPath}" Width="800" />
         </StackPanel>
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5, 5, 5, 0">
           <Button Command="{Binding ChangeCompListPath}" Width="300" Content="Выбрать список компетенций" />
-          <TextBox Text="{Binding CompListPath}" Width="300" />
+          <TextBox Text="{Binding CompListPath}" Width="800" />
         </StackPanel>
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5, 5, 5, 5">
           <Button Command="{Binding ChangeCompMatrixPath}" Width="300" Content="Выбрать матрицу компетенций" />
-          <TextBox Text="{Binding CompMatrixPath}" Width="300" />
+          <TextBox Text="{Binding CompMatrixPath}" Width="800" />
         </StackPanel>
 
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="5, 5, 5, 5">
 
           <Button Command="{Binding LoadDataButton}" DockPanel.Dock="Right" Content="Загрузить данные" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
 
-          <Button Command="{Binding MakeDwps}" DockPanel.Dock="Right" Content="Сформировать шаблоны" HorizontalAlignment="Left" />
+          <Button Command="{Binding MakeDwps}" DockPanel.Dock="Right" Content="Сформировать шаблоны" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
+
+		  <Button Command="{Binding CheckDate}" DockPanel.Dock="Right" Content="Проверить соответствие" HorizontalAlignment="Left" />
 
         </StackPanel>
 
       </DockPanel>
 
-      <TreeView DockPanel.Dock="Left" Items="{Binding Items}" Margin="5, 0, 5, 5">
+      <TreeView DockPanel.Dock="Left" ItemsSource="{Binding Items}" Margin="5, 0, 5, 5">
         <TreeView.ItemTemplate>
           <TreeDataTemplate ItemsSource="{Binding Path=Nodes}">
             <StackPanel Orientation="Horizontal">

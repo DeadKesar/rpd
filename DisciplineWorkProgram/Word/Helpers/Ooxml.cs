@@ -18,7 +18,7 @@ namespace DisciplineWorkProgram.Word.Helpers
 
             if (elem == null)
             {
-                var temp =  FindElementsByBookmark2<T>(doc, bookmarkStart);
+                var temp = FindElementsByBookmark2<T>(doc, bookmarkStart);
                 return temp;
             }
 
@@ -62,7 +62,7 @@ namespace DisciplineWorkProgram.Word.Helpers
             return elements;
         }
 
-        public static IDictionary<string, BookmarkStart> GetBookmarks(WordprocessingDocument doc, string bookmarkStartName) 
+        public static IDictionary<string, BookmarkStart> GetBookmarks(WordprocessingDocument doc, string bookmarkStartName)
         {
             var bookmarkMap = new Dictionary<string, BookmarkStart>();
 
@@ -80,7 +80,14 @@ namespace DisciplineWorkProgram.Word.Helpers
 
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
-            doc.SaveAs($"{dir}/{name}.docx");
+
+            string path = Path.Combine($"{dir}/{name}.docx");
+            using (var stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite))
+            {
+                // Метод Create возвращает новый пакет, а затем данные копируются
+                var newDoc = (doc as WordprocessingDocument).Clone(stream);
+                newDoc.Save(); // Сохраняем документ
+            }
         }
 
         public static IEnumerable<T> FindElementsByBookmark2<T>(WordprocessingDocument doc, BookmarkStart bookmarkStart) where T : OpenXmlElement
@@ -94,7 +101,7 @@ namespace DisciplineWorkProgram.Word.Helpers
 
             var bookmarkEnd = body.Descendants<BookmarkEnd>()
                                   .FirstOrDefault(be => be.Id == bookmarkStart.Id);
-            if(bookmarkStartTemp == null)
+            if (bookmarkStartTemp == null)
                 throw new Exception($"Не найдено начало закладки для ID {bookmarkStart.Id}");
             if (bookmarkEnd == null)
                 throw new Exception($"Не найден конец закладки для ID {bookmarkStart.Id}");

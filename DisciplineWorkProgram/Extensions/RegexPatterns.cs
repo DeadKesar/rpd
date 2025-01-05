@@ -2,9 +2,9 @@
 
 namespace DisciplineWorkProgram.Extensions
 {
-	public static class RegexPatterns
-	{
-		//Повторяющиеся пробелы
-		public static readonly Regex MultipleSpaces = new Regex("[ ]{2,}");
-	}
+    public static class RegexPatterns
+    {
+        //Повторяющиеся пробелы
+        public static readonly Regex MultipleSpaces = new Regex("[ ]{2,}");
+    }
 }
