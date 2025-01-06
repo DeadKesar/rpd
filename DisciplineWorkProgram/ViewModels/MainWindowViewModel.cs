@@ -17,6 +17,10 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Models;
 
+using NPOI.HSSF.UserModel;    // Для .xls (HSSF)
+using NPOI.SS.UserModel;     // Общий интерфейс
+using NPOI.XSSF.UserModel;   // Для .xlsx (XSSF)
+
 namespace DisciplineWorkProgram.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
@@ -182,14 +186,18 @@ namespace DisciplineWorkProgram.ViewModels
             var section = new Section(CompListPath, CompMatrixPath);
 
             var ext = Path.GetExtension(PlanPath);
-            var outPath = "";
 
-            if (ext != ".xlsx")
+
+         /*   if (ext != ".xlsx")
             {
-                Excel.Converter.Convert(PlanPath, out outPath);
-                PlanPath = outPath;
-            }
-            using var plan = Excel.Converter.Convert(PlanPath);
+                Excel.Converter.Convert2(PlanPath);
+                //PlanPath = outPath;
+            }*/
+            using var plan = (ext != ".xlsx")? Excel.Converter.Convert2(PlanPath) : Excel.Converter.Convert(PlanPath);
+            using var fileOut = File.Create(PlanPath + "x");
+            plan.CopyTo(fileOut);
+            planPath = PlanPath + "x";
+            fileOut.Close();
 #if DEBUG
             section.LoadDataFromPlan(PlanPath);
             section.LoadCompetenciesData();
@@ -249,7 +257,7 @@ namespace DisciplineWorkProgram.ViewModels
             var section = SectionsByWayName.Single().Sections.Single();
             List<string> problems1 = new List<string>();
             List<string> problems2 = new List<string>();
-            foreach (var discipline in section.GetCheckedDisciplinesNames)
+            foreach (var discipline in section.GetAnyDisciplinesNames)
             {
                 if (!section.Disciplines.ContainsKey(discipline))
                 {
@@ -263,17 +271,17 @@ namespace DisciplineWorkProgram.ViewModels
             if (problems1.Count > 0 || problems2.Count > 0)
             {
                 StringBuilder strTemp = new StringBuilder();
-                strTemp.Append("\n проблемы по первой стадии:\n");
+                strTemp.Append("проблемы по учебному плану:\n");
                 foreach (var problem in problems1)
                 {
                     strTemp.Append(problem);
-                    strTemp.Append(", ");
+                    strTemp.Append("\n");
                 }
-                strTemp.Append("\n проблемы по второй стадии:\n");
+                strTemp.Append("\nпроблемы по матрице компетенций:\n");
                 foreach (var problem in problems2)
                 {
                     strTemp.Append(problem);
-                    strTemp.Append(", ");
+                    strTemp.Append("\n");
                 }
 
                 var messageBoxCustomWindow = MessageBoxManager
@@ -283,13 +291,13 @@ namespace DisciplineWorkProgram.ViewModels
                        ButtonDefinitions = new[] {
                                             new ButtonDefinition {Name = "Ok"}
                        },
-                       ContentMessage = "sdasdsad:" + strTemp.ToString(),
+                       ContentMessage = strTemp.ToString(),
                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
                        CanResize = true,
-                       MinHeight = 1000,
-                       MinWidth = 1000,
-                       MaxWidth = 2500,
-                       MaxHeight = 2800,
+                       MinHeight = 300,
+                       MinWidth = 400,
+                       MaxWidth = 1000,
+                       MaxHeight = 1500,
                        SizeToContent = SizeToContent.WidthAndHeight,
                        ShowInCenter = true,
                        Topmost = true

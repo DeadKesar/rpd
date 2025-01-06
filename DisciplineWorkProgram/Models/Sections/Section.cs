@@ -259,6 +259,11 @@ namespace DisciplineWorkProgram.Models.Sections
                 .Where(d => d.Value.IsChecked)
                 .Select(kv => kv.Key);
 
+        public IEnumerable<string> GetAnyDisciplinesNames =>
+            Disciplines
+                .Where(d => true)
+                .Select(kv => kv.Key);
+
         /// <summary>
         /// Поиск заданного слова на странице
         /// </summary>
