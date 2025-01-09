@@ -194,10 +194,19 @@ namespace DisciplineWorkProgram.ViewModels
                 //PlanPath = outPath;
             }*/
             using var plan = (ext != ".xlsx")? Excel.Converter.Convert2(PlanPath) : Excel.Converter.Convert(PlanPath);
-            using var fileOut = File.Create(PlanPath + "x");
-            plan.CopyTo(fileOut);
-            planPath = PlanPath + "x";
-            fileOut.Close();
+            if (ext != ".xlsx")
+            {
+                var name = "\\temp.xlsx";
+
+                if (!Directory.Exists(DwpDir))
+                    Directory.CreateDirectory(DwpDir);
+
+                using var fileOut = File.Create(DwpDir + name);
+                plan.CopyTo(fileOut);
+                planPath = DwpDir + name;
+                fileOut.Close();
+            }
+
 #if DEBUG
             section.LoadDataFromPlan(PlanPath);
             section.LoadCompetenciesData();

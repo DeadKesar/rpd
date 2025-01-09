@@ -83,7 +83,7 @@ namespace DisciplineWorkProgram.Models.Sections
 
                     var cells = row.Descendants<TableCell>().ToArray();
                     //var disc = cells[0].Elements<Paragraph>().Single().InnerText; //название дисциплины в первой ячейке
-                    var disc = cells[0].InnerText;
+                    var disc = cells[0].InnerText.TrimStart();
 
                     if (!DisciplineCompetencies.ContainsKey(disc))
                         DisciplineCompetencies[disc] = new List<string>();
