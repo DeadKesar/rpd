@@ -88,10 +88,11 @@ namespace DisciplineWorkProgram.Models.Sections
                     if (!DisciplineCompetencies.ContainsKey(disc))
                         DisciplineCompetencies[disc] = new List<string>();
                     //Если заголовок не код компетенции или ячейка пуста, то пропускаем
-                    for (var i = 1; i < cells.Length; i++)
+                    for (var i = 1; i < headers.Length; i++)
                     {
                         if (!RegexPatterns.Competence.IsMatch(headers[i]) ||
-                            string.IsNullOrWhiteSpace(cells[i].InnerText))//string.IsNullOrWhiteSpace(cells[i].Elements<Paragraph>().Single().InnerText))
+                            i - (headers.Length - cells.Length) < 0 ||
+                            string.IsNullOrWhiteSpace(cells[i-(headers.Length - cells.Length)].InnerText))//string.IsNullOrWhiteSpace(cells[i].Elements<Paragraph>().Single().InnerText))
                             continue;
 
                         DisciplineCompetencies[disc].Add(headers[i]);
@@ -228,15 +229,16 @@ namespace DisciplineWorkProgram.Models.Sections
         private void LoadCompetencies(WordprocessingDocument document)
         {
             var competencies = ParseCompetencies(document).ToArray();
-
-            var regex = new Regex(@"^(УК-\d+(\.\d+)*|ОПК-\d+(\.\d+)*|ПК-\d+(\.\d+)*)\b");
-            //Составление набора ключей-компетенций
+            var regex = RegexPatterns.CompetenceName2;
+            //var regex = new Regex(@"^(УК-[\dЗ]+(\.\d+)*|ОПК-[\dЗ]+(\.\d+)*|ПК-[\dЗ]+(\.[\dЗ]+)*)\b");
+            //Составление набора ключей-компетенций 
             foreach (var competency in competencies)
             {
                 var match = regex.Match(competency);
                 if (match.Success)
                 {
-                    var key = match.Value;
+                    var key = match.Value.Replace(" ", "").Replace("З", "3");
+
 
                     if (!Competencies.ContainsKey(key))
                     {
