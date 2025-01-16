@@ -121,35 +121,47 @@ namespace DisciplineWorkProgram.Models
             {
                 if (!Section.Competencies.ContainsKey(competence)) continue;
 
-                var row = new TableRow();
-                row.AppendChild(GetTableCellByString(Section.Competencies[competence].Name));
+
+                var firstCell = new TableCell(
+                new TableCellProperties(
+                    new VerticalMerge { Val = MergedCellValues.Restart }
+                    ),
+                    new Paragraph(new Run(new Text(Section.Competencies[competence].Name)))
+                );
+
                 var relatedCompetencies = Section.Competencies
                     .Where(kvp => kvp.Key.StartsWith(competence + "."))
                     .ToList();
                 var cell = new TableCell();
 
                 var paragraph = new Paragraph();
+                bool isFirst = true;
 
                 foreach (var s in relatedCompetencies)
                 {
-                    // Добавляем текст в параграф
+                    var row = new TableRow();
+                    if (isFirst)
+                    {
+                        row.Append(firstCell);
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        row.Append(new TableCell(
+                            new TableCellProperties(
+                                new VerticalMerge { Val = MergedCellValues.Continue }
+                            )
+                        ));
+                    }
+                    paragraph = new Paragraph();
                     paragraph.AppendChild(new Run(new Text(s.Value.Name)));
-                    // Добавляем перенос строки
-                    paragraph.AppendChild(new Run(new Break()));
-                }
+                    var tableCell = new TableCell(paragraph);
+                    row.AppendChild(tableCell);
+                    row.AppendChild(new TableCell());
+                    row.AppendChild(new TableCell());
+                    table.AppendChild(row);
 
-                // Убираем последний Break, если нужно
-                if (paragraph.LastChild is Run lastRun && lastRun.LastChild is Break)
-                {
-                    lastRun.RemoveChild(lastRun.LastChild);
                 }
-
-                // Создаём ячейку и добавляем в неё параграф
-                var tableCell = new TableCell(paragraph);
-                row.AppendChild(tableCell);
-                row.AppendChild(new TableCell());
-                row.AppendChild(new TableCell());
-                table.AppendChild(row);
 
             }
         }
