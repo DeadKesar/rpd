@@ -32,7 +32,9 @@
 
           <Button Command="{Binding LoadDataButton}" DockPanel.Dock="Right" Content="Загрузить данные" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
 
-          <Button Command="{Binding MakeDwps}" DockPanel.Dock="Right" Content="Сформировать шаблоны" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
+          <Button Command="{Binding MakeDwps}" DockPanel.Dock="Right" Content="Сформировать РПДы" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
+
+		    <Button Command="{Binding MakeFoses}" DockPanel.Dock="Right" Content="Сформировать ФОСы" HorizontalAlignment="Left" Margin="0, 0, 5, 0"/>
 
 		  <Button Command="{Binding CheckDate}" DockPanel.Dock="Right" Content="Проверить соответствие" HorizontalAlignment="Left" />
 

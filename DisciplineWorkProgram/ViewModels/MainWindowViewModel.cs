@@ -27,6 +27,8 @@ namespace DisciplineWorkProgram.ViewModels
     {
         public string TemplatePath = Directory.GetCurrentDirectory() + "\\DWP_TemplateBookmarks.docx";
         public const string DwpDir = "dwp/";
+        public string TemplatePath2 = Directory.GetCurrentDirectory() + "\\FOS_TemplateBookmarks.docx";
+        public const string fosDir = "fos/";
         public bool isHasDate = false;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -134,6 +136,33 @@ namespace DisciplineWorkProgram.ViewModels
 				{
 					new Dwp(section)
 						.MakeDwp(TemplatePath, DwpDir, discipline);
+				}
+			}
+            catch (Exception ex)
+            {
+                ShowErrorAsync(ex.Message); // Отображаем ошибку пользователю
+            }
+#endif
+        }
+        public void MakeFoses()
+        {
+
+#if DEBUG
+            var section = SectionsByWayName.Single().Sections.Single();
+
+            foreach (var discipline in section.GetCheckedDisciplinesNames)
+            {
+                new Fos(section)
+                    .MakeFos(TemplatePath2, fosDir, discipline);
+            }
+#else
+			try
+			{
+				var section = SectionsByWayName.Single().Sections.Single();
+				foreach (var discipline in section.GetCheckedDisciplinesNames)
+				{
+					new Fos(section)
+                    .MakeFos(TemplatePath2, fosDir, discipline);
 				}
 			}
             catch (Exception ex)
