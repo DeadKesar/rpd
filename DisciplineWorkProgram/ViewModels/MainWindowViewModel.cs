@@ -30,6 +30,7 @@ namespace DisciplineWorkProgram.ViewModels
         public string TemplatePath2 = Directory.GetCurrentDirectory() + "\\FOS_TemplateBookmarks.docx";
         public const string fosDir = "fos/";
         public bool isHasDate = false;
+        public string PathToDolz = Directory.GetCurrentDirectory() + "\\dolznosti.xlsx";
 
         public event PropertyChangedEventHandler PropertyChanged;
 
