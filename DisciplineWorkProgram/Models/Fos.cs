@@ -28,7 +28,7 @@ namespace DisciplineWorkProgram.Models
 
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
             var bookmarkMap = GetBookmarks(doc, "Autofill");
-            
+
             WriteSectionData(bookmarkMap, doc);
             WriteDisciplineData(bookmarkMap, discipline, doc);
             //WriteRequirements(bookmarkMap, discipline, doc);
@@ -103,6 +103,12 @@ namespace DisciplineWorkProgram.Models
                     countForPartFormForPartners++;
                     continue;
                 }
+                if (actualKey == "Year")
+                {
+                    FindElementsByBookmark<Text>(bookmark, 1, doc)
+                        .First(elem => elem.Text.Contains("AutofillYear"))
+                        .Text = DateTime.Today.Year.ToString();
+                }
 
                 if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
                     FindElementsByBookmark<Text>(bookmark, 1, doc)
@@ -132,9 +138,9 @@ namespace DisciplineWorkProgram.Models
                 var relatedCompetencies = Section.Competencies
                     .Where(kvp => kvp.Key.StartsWith(competence + "."))
                     .ToList();
-                var cell = new TableCell();
+                //var cell = new TableCell();
 
-                var paragraph = new Paragraph();
+                //var paragraph = new Paragraph();
                 bool isFirst = true;
 
                 foreach (var s in relatedCompetencies)
@@ -153,17 +159,18 @@ namespace DisciplineWorkProgram.Models
                             )
                         ));
                     }
-                    paragraph = new Paragraph();
-                    paragraph.AppendChild(new Run(new Text(s.Value.Name)));
+                    var paragraph = new Paragraph(new Run(new Text(s.Value.Name)));
                     var tableCell = new TableCell(paragraph);
                     row.AppendChild(tableCell);
-                    row.AppendChild(new TableCell());
-                    row.AppendChild(new TableCell());
+                    row.AppendChild(new TableCell(new Paragraph(new Run(new Text("")))));
+                    row.AppendChild(new TableCell(new Paragraph(new Run(new Text("")))));
+
                     table.AppendChild(row);
 
                 }
 
             }
         }
+
     }
 }
