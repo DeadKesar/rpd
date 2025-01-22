@@ -23,7 +23,7 @@ namespace DisciplineWorkProgram.Models
         private Section Section { get; }
 
         //Должно обрабатывать только 1 дисциплину, чтобы "масштабировать" без доп. кода
-        public void MakeDwp(string templatePath, string dwpDir, string discipline)
+        public void MakeDwp(string templatePath, string dwpDir, string discipline, Employee employes)
         {
 
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
@@ -31,6 +31,7 @@ namespace DisciplineWorkProgram.Models
 
             WriteSectionData(bookmarkMap, doc);
             WriteDisciplineData(bookmarkMap, discipline, doc);
+            WriteEmploesData(bookmarkMap, discipline, doc, employes);
             WriteRequirements(bookmarkMap, discipline, doc);
             WriteCompetenciesTable(bookmarkMap, discipline, doc); //заполняет табличку компетенций
             WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
@@ -113,7 +114,89 @@ namespace DisciplineWorkProgram.Models
             }
         }
 
-        private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
+        private void WriteEmploesData(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc, Employee employes)
+        {
+            if (!Section.Disciplines.ContainsKey(discipline))
+                return;
+            foreach (var (key, bookmark) in bookmarkMap)
+            {
+                var actualKey = key.Substring(0, key.Length - 1);
+
+                switch (actualKey)
+                {
+                    case "PositionKaf":
+                        if (Section.Disciplines[discipline].Props["Department"] == "")
+                            continue;
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees[Section.Disciplines[discipline].Props["Department"]]["position"];
+                        continue;
+                    case "PositionKafForDoc":
+                        if (Section.Disciplines[discipline].Props["Department"] == "")
+                            continue;
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees[Section.Disciplines[discipline].Props["Department"]]["nameForDoc"];
+                        continue;
+
+                    case "PositionKafName":
+                        if (Section.Disciplines[discipline].Props["Department"] == "")
+                            continue;
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees[Section.Disciplines[discipline].Props["Department"]]["FIO"];
+                        continue;
+
+                    case "PositionUmu":
+                            FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Начальник учебно-методического управления ДСиРОД"]["position"];
+                        continue;
+                    case "PositionUmuName":
+                            FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Начальник учебно-методического управления ДСиРОД"]["FIO"];
+                        continue;
+                    case "PositionBib":
+                            FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Директор научно-технической библиотеки"]["position"];
+                        continue;
+                    case "PositionBibName":
+                            FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Директор научно-технической библиотеки"]["FIO"];
+                        continue;
+                    case "PositionUitp":
+                            FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Начальник управления информационно-технической поддержки ДЦТ"]["position"];
+                        continue;
+                    case "PositionUitpName":
+                            FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Начальник управления информационно-технической поддержки ДЦТ"]["FIO"];
+                        continue;
+                    case "PositionInst":
+                        if (Section.Disciplines[discipline].Props["Department"] == "" || Section.Disciplines[discipline].Props["Department"] == "Управление по организации проектного обучения")
+                            continue;
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees[employes.Employees[Section.Disciplines[discipline].Props["Department"]]["institut"]]["position"];
+                        continue;
+                    case "PositionInstName":
+                        if (Section.Disciplines[discipline].Props["Department"] == "" || Section.Disciplines[discipline].Props["Department"] == "Управление по организации проектного обучения")
+                            continue;
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees[employes.Employees[Section.Disciplines[discipline].Props["Department"]]["institut"]]["FIO"];
+                        continue;
+                        
+                }
+            }
+        }
+
+            private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;

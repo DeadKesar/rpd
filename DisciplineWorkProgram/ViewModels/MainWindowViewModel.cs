@@ -96,6 +96,7 @@ namespace DisciplineWorkProgram.ViewModels
 
         public void LoadDataButton()
         {
+            //var temp = employes.Employees["Финансовый менеджмент"]["position"];
             
             if (string.IsNullOrWhiteSpace(PlanPath) || string.IsNullOrWhiteSpace(CompListPath) || string.IsNullOrWhiteSpace(CompMatrixPath))
             {
@@ -115,6 +116,7 @@ namespace DisciplineWorkProgram.ViewModels
             }
             LoadData();
             UpdateSource();
+
         }
 
         public void MakeDwps()
@@ -127,18 +129,18 @@ namespace DisciplineWorkProgram.ViewModels
             foreach (var discipline in section.GetCheckedDisciplinesNames)
             {
                 new Dwp(section)
-                    .MakeDwp(TemplatePath, DwpDir, discipline);
+                    .MakeDwp(TemplatePath, DwpDir, discipline, employes);
             }
 #else
-			try
-			{
+            try
+            {
 				var section = SectionsByWayName.Single().Sections.Single();
 				//new Dwp(section)
 				//		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
 				foreach (var discipline in section.GetCheckedDisciplinesNames)
 				{
 					new Dwp(section)
-						.MakeDwp(TemplatePath, DwpDir, discipline);
+						.MakeDwp(TemplatePath, DwpDir, discipline, employes);
 				}
 			}
             catch (Exception ex)
@@ -156,16 +158,16 @@ namespace DisciplineWorkProgram.ViewModels
             foreach (var discipline in section.GetCheckedDisciplinesNames)
             {
                 new Fos(section)
-                    .MakeFos(TemplatePath2, fosDir, discipline);
+                    .MakeFos(TemplatePath2, fosDir, discipline, employes);
             }
 #else
-			try
-			{
+            try
+            {
 				var section = SectionsByWayName.Single().Sections.Single();
 				foreach (var discipline in section.GetCheckedDisciplinesNames)
 				{
 					new Fos(section)
-                    .MakeFos(TemplatePath2, fosDir, discipline);
+                    .MakeFos(TemplatePath2, fosDir, discipline, employes);
 				}
 			}
             catch (Exception ex)
