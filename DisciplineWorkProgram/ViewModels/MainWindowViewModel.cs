@@ -31,6 +31,7 @@ namespace DisciplineWorkProgram.ViewModels
         public const string fosDir = "fos/";
         public bool isHasDate = false;
         public string PathToDolz = Directory.GetCurrentDirectory() + "\\dolznosti.xlsx";
+        public Employee employes = new Employee(Directory.GetCurrentDirectory() + "\\dolznosti.xlsx");
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -95,6 +96,7 @@ namespace DisciplineWorkProgram.ViewModels
 
         public void LoadDataButton()
         {
+            
             if (string.IsNullOrWhiteSpace(PlanPath) || string.IsNullOrWhiteSpace(CompListPath) || string.IsNullOrWhiteSpace(CompMatrixPath))
             {
                 var messageBoxCustomWindow = MessageBoxManager.GetMessageBoxCustom(

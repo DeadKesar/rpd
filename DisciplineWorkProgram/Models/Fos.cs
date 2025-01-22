@@ -143,6 +143,17 @@ namespace DisciplineWorkProgram.Models
                 //var paragraph = new Paragraph();
                 bool isFirst = true;
 
+                if (relatedCompetencies.Count == 0)
+                {
+                    var emptyRow = new TableRow();
+                    emptyRow.Append(firstCell);
+                    emptyRow.Append(new TableCell(new Paragraph(new Run(new Text("")))));
+                    emptyRow.Append(new TableCell(new Paragraph(new Run(new Text("")))));
+                    emptyRow.Append(new TableCell(new Paragraph(new Run(new Text("")))));
+                    table.AppendChild(emptyRow);
+                    continue;
+                }
+
                 foreach (var s in relatedCompetencies)
                 {
                     var row = new TableRow();
@@ -156,7 +167,7 @@ namespace DisciplineWorkProgram.Models
                         row.Append(new TableCell(
                             new TableCellProperties(
                                 new VerticalMerge { Val = MergedCellValues.Continue }
-                            )
+                            ), new Paragraph()
                         ));
                     }
                     var paragraph = new Paragraph(new Run(new Text(s.Value.Name)));
