@@ -110,6 +110,141 @@ namespace DisciplineWorkProgram.Models
                         .First(elem => elem.Text.Contains("AutofillYear"))
                         .Text = DateTime.Today.Year.ToString();
                 }
+                if (actualKey == "PassDestination")
+                {
+                    String name;
+                    if (Section.Disciplines[discipline].Props["Name"].Contains("практик"))
+                    {
+                        name = "фонда оценочных средств по практике: " + Section.Disciplines[discipline].Props["Name"];
+                    }
+                    else if (Section.Disciplines[discipline].Props["Name"].Contains("выпускной квалификационной работы"))
+                    {
+                        name = "фонда оценочных средств по ГИА: " + Section.Disciplines[discipline].Props["Name"];
+                    }
+                    else
+                    {
+                        name = "фонда оценочных средств по дисциплине: " + Section.Disciplines[discipline].Props["Name"];
+                    }
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = name;
+                    continue;
+                }
+                //"AutofillMonitoring" = "За"
+                if (actualKey == "Monitoring")
+                {
+                    StringBuilder temp = new StringBuilder();
+
+                    foreach (var mon in Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring)) {
+                        foreach (var item in mon.Split(' '))
+                        {
+                            if (item == "За")
+                            {
+                                if (temp.Length > 0)
+                                    temp.Append(", ");
+
+                                temp.Append("Зачёта");
+                            }
+                            if (item == "Эк")
+                            {
+                                if (temp.Length > 0)
+                                    temp.Append(", ");
+
+                                temp.Append("Экзамена");
+                            }
+                            if (item == "ЗаО")
+                            {
+                                if (temp.Length > 0)
+                                    temp.Append(", ");
+
+                                temp.Append("Зачёта с оценкой");
+                            }
+                            if (item == "КР")
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    FindElementsByBookmark<Text>(bookmark, 1, doc)
+                        .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                        .Text = temp.ToString();
+                    continue;
+                }
+                if (actualKey == "MonitoringU")
+                {
+                    StringBuilder temp = new StringBuilder();
+
+                    foreach (var mon in Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring))
+                    {
+                        foreach (var item in mon.Split(' '))
+                        {
+                            if (item == "За")
+                            {
+                                if (temp.Length > 0)
+                                    temp.Append(", ");
+
+                                temp.Append("Зачёту");
+                            }
+                            if (item == "Эк")
+                            {
+                                if (temp.Length > 0)
+                                    temp.Append(", ");
+
+                                temp.Append("Экзамену");
+                            }
+                            if (item == "ЗаО")
+                            {
+                                if (temp.Length > 0)
+                                    temp.Append(", ");
+
+                                temp.Append("Зачёту с оценкой");
+                            }
+                            if (item == "КР")
+                            {
+                                continue;
+                            }
+
+                        }
+                    }
+
+                    FindElementsByBookmark<Text>(bookmark, 1, doc)
+                        .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                        .Text = temp.ToString();
+                    continue;
+                }
+
+                if (actualKey == "EducationLvl")
+                {
+                    //Специальность / направление 
+                    String edLVL;
+                    if (Section.SectionDictionary["EducationLevel"] == "Специалитет")
+                    {
+                        edLVL = "Специальность";
+                    }
+                    else
+                        edLVL = "Направление";
+                    FindElementsByBookmark<Text>(bookmark, 1, doc)
+                        .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                        .Text = edLVL.ToString();
+                    continue;
+                }
+                if (actualKey == "Curs")
+                {
+                    StringBuilder temp = new StringBuilder();
+
+                    foreach (var sem in Section.Disciplines[discipline].Details.Values.Select(details => details.Semester))
+                    {
+                        int num = (int)((int.Parse(sem) - 1) / 2) + 1;
+                        temp.Append(num.ToString() + " курса(" + sem + " семестра)");
+                        temp.Append(" ");
+                    }
+
+                    FindElementsByBookmark<Text>(bookmark, 1, doc)
+                        .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                        .Text = temp.ToString();
+                    continue;
+                }
+
 
                 if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
                     FindElementsByBookmark<Text>(bookmark, 1, doc)
@@ -193,6 +328,16 @@ namespace DisciplineWorkProgram.Models
                         FindElementsByBookmark<Text>(bookmark, 1, doc)
                                 .First(elem => elem.Text.Contains("Autofill" + actualKey))
                                 .Text = employes.Employees[employes.Employees[Section.Disciplines[discipline].Props["Department"]]["institut"]]["FIO"];
+                        continue;
+                    case "ProOD":
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Проректор по образовательной деятельности и молодежной политике"]["nameForDoc"];
+                        continue;
+                    case "ProODName":
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Проректор по образовательной деятельности и молодежной политике"]["FIO"];
                         continue;
 
                 }

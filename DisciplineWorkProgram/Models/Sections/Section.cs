@@ -18,7 +18,6 @@ namespace DisciplineWorkProgram.Models.Sections
     public class Section : HierarchicalCheckableElement //Section - направление
     {
         public string Name => SectionDictionary.ContainsKey("WaySection") ? SectionDictionary["WaySection"] : "";
-
         protected override IEnumerable<HierarchicalCheckableElement> GetNodes() => Disciplines.Values;
 
         private readonly string _compListPath;
@@ -192,6 +191,7 @@ namespace DisciplineWorkProgram.Models.Sections
 
                     var details = new DisciplineDetails
                     {
+                        Semester = semester.ToString(),
                         Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
                         Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
                         Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лек$", true)).GetInt(),
@@ -210,6 +210,7 @@ namespace DisciplineWorkProgram.Models.Sections
 
                     details = new DisciplineDetails
                     {
+                        Semester = semester.ToString(),
                         Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
                         Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
                         Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лек$", true)).GetInt(),

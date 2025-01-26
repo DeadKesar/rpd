@@ -80,7 +80,7 @@ namespace DisciplineWorkProgram.Models
                 var actualKey = key.Substring(0, key.Length - 1);
 
                 var d = Section.Disciplines[discipline].Props.ContainsKey(actualKey);
-                //кастыль. я пока не понял как правильно создать закладку чтобы она не ломала программу.
+
                 if (actualKey == "Discipline")
                 {
                     if (Section.Disciplines[discipline].Props.ContainsKey(actualKey))
@@ -471,6 +471,7 @@ namespace DisciplineWorkProgram.Models
                 {
                     atAll = new DisciplineDetails
                     {
+                        Semester = "0",
                         Monitoring = " , , , , , , , , ",
                         Contact = 0,
                         Lec = 0,
@@ -485,6 +486,8 @@ namespace DisciplineWorkProgram.Models
                 {
                     atAll = new DisciplineDetails
                     {
+                        Semester = Section.Disciplines[discipline].Details.Values.Select(details => details.Semester)
+                            .Aggregate((current, next) => current + ", " + next),
                         Monitoring = Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring)
                             .Aggregate((current, next) => current + ", " + next),
                         Contact = Section.Disciplines[discipline].Details.Values.Sum(details => details.Contact),

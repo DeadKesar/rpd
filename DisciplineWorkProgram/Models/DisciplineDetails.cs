@@ -10,8 +10,10 @@
         public int Ind { get; set; }
         public int Control { get; set; }
         public int Ze { get; set; }
+        public string Semester { get; set; }
 
         public bool IsHollow => string.IsNullOrWhiteSpace(Monitoring) &&
+                                string.IsNullOrWhiteSpace(Semester) &&
                               Contact == 0 &&
                               Lec == 0 &&
                               Lab == 0 &&
@@ -44,6 +46,7 @@
             6 => Ind.ToString(),
             7 => string.Empty,
             8 => Monitoring,
+            9 => Semester,
             _ => string.Empty
         };
 
