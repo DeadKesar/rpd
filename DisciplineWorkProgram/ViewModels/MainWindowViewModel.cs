@@ -25,10 +25,12 @@ namespace DisciplineWorkProgram.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        public string TemplatePath = Directory.GetCurrentDirectory() + "\\DWP_TemplateBookmarks.docx";
+        public string DWPTemplatePath = Directory.GetCurrentDirectory() + "\\DWP_TemplateBookmarks.docx";
         public const string DwpDir = "dwp/";
-        public string TemplatePath2 = Directory.GetCurrentDirectory() + "\\FOS_TemplateBookmarks.docx";
+        public string FOSTemplatePath = Directory.GetCurrentDirectory() + "\\FOS_TemplateBookmarks.docx";
         public const string fosDir = "fos/";
+        public string PRACTemplatePath = Directory.GetCurrentDirectory() + "\\PRAC_TemplateBookmarks.docx";
+        public const string pracDir = "prac/";
         public bool isHasDate = false;
         public string PathToDolz = Directory.GetCurrentDirectory() + "\\dolznosti.xlsx";
         public Employee employes = new Employee(Directory.GetCurrentDirectory() + "\\dolznosti.xlsx");
@@ -121,15 +123,28 @@ namespace DisciplineWorkProgram.ViewModels
 
         public void MakeDwps()
         {
-
+            String TemplatePath;
+            String dir;
 #if DEBUG
             var section = SectionsByWayName.Single().Sections.Single();
             //new Dwp(section)
             //		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
             foreach (var discipline in section.GetCheckedDisciplinesNames)
             {
+             if (discipline.Contains("Б2") 
+                        ||section.Disciplines[discipline].Props["Name"].ToLower().Contains("практика") 
+                        || section.Disciplines[discipline].Props["Name"].ToLower().Contains("аттестация"))
+                    {
+                        TemplatePath = PRACTemplatePath;
+                        dir = pracDir;
+                    }
+                    else
+                    {
+                        TemplatePath = DWPTemplatePath;
+                        dir = DwpDir;
+                    }
                 new Dwp(section)
-                    .MakeDwp(TemplatePath, DwpDir, discipline, employes);
+                    .MakeDwp(TemplatePath, dir, discipline, employes);
             }
 #else
             try
@@ -139,8 +154,20 @@ namespace DisciplineWorkProgram.ViewModels
 				//		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
 				foreach (var discipline in section.GetCheckedDisciplinesNames)
 				{
+                    if (discipline.Contains("Б2") 
+                        ||section.Disciplines[discipline].Props["Name"].ToLower().Contains("практика") 
+                        || section.Disciplines[discipline].Props["Name"].ToLower().Contains("аттестация"))
+                    {
+                        TemplatePath = PRACTemplatePath;
+                        dir = pracDir;
+                    }
+                    else
+                    {
+                        TemplatePath = DWPTemplatePath;
+                        dir = DwpDir;
+                    }
 					new Dwp(section)
-						.MakeDwp(TemplatePath, DwpDir, discipline, employes);
+						.MakeDwp(TemplatePath, dir, discipline, employes);
 				}
 			}
             catch (Exception ex)
@@ -158,7 +185,7 @@ namespace DisciplineWorkProgram.ViewModels
             foreach (var discipline in section.GetCheckedDisciplinesNames)
             {
                 new Fos(section)
-                    .MakeFos(TemplatePath2, fosDir, discipline, employes);
+                    .MakeFos(FOSTemplatePath, fosDir, discipline, employes);
             }
 #else
             try
@@ -167,7 +194,7 @@ namespace DisciplineWorkProgram.ViewModels
 				foreach (var discipline in section.GetCheckedDisciplinesNames)
 				{
 					new Fos(section)
-                    .MakeFos(TemplatePath2, fosDir, discipline, employes);
+                    .MakeFos(FOSTemplatePath, fosDir, discipline, employes);
 				}
 			}
             catch (Exception ex)
@@ -281,6 +308,8 @@ namespace DisciplineWorkProgram.ViewModels
 #endif
             isHasDate = true;
         }
+
+
         public void CheckDate()
         {
             if (!isHasDate)
@@ -298,8 +327,9 @@ namespace DisciplineWorkProgram.ViewModels
                 return;
             }
             var section = SectionsByWayName.Single().Sections.Single();
-            List<string> problems1 = new List<string>();
-            List<string> problems2 = new List<string>();
+            List<string> problems1 = new List<string>();//проверяем что дисциплины содежат дисциплины... бред, но эта проверка была изначально и я её оставил
+            List<string> problems2 = new List<string>();//сверяем что дисциплины полученные из плана соответствуют дисциплинам из матрицы компетенции
+            List<string> problems3 = new List<string>();// сверяем что все кафедры из плана есть в нашем плане
             foreach (var discipline in section.GetAnyDisciplinesNames)
             {
                 if (!section.Disciplines.ContainsKey(discipline))
@@ -309,6 +339,10 @@ namespace DisciplineWorkProgram.ViewModels
                 if (!section.DisciplineCompetencies.ContainsKey(section.Disciplines[discipline].Name))
                 {
                     problems2.Add(section.Disciplines[discipline].Name);
+                }
+                if (!employes.Employees.ContainsKey(section.Disciplines[discipline].Props["Department"]))
+                {
+                    problems3.Add(section.Disciplines[discipline].Props["Department"]);
                 }
             }
             if (problems1.Count > 0 || problems2.Count > 0)
@@ -322,6 +356,12 @@ namespace DisciplineWorkProgram.ViewModels
                 }
                 strTemp.Append("\nпроблемы по матрице компетенций:\n");
                 foreach (var problem in problems2)
+                {
+                    strTemp.Append(problem);
+                    strTemp.Append("\n");
+                }
+                strTemp.Append("\nпроблемы по файлу с должностями:\nНе обнаружены кафедры:\n");
+                foreach (var problem in problems3)
                 {
                     strTemp.Append(problem);
                     strTemp.Append("\n");

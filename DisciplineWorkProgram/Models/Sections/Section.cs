@@ -162,14 +162,24 @@ namespace DisciplineWorkProgram.Models.Sections
                 int count = 1;
                 foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell(FindColumn(worksheet, "№")).GetString(), out _))
                     .Concat(worksheet.RowsUsed().Where(row =>
-                        row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация"))))
+                        row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация")))
+                    )
                 {
+
                     var discipline = row.Cell(FindColumn(worksheet, "Индекс", true)).GetString();
                     if (string.IsNullOrWhiteSpace(discipline))
                         discipline = row.Cell("E").GetString(); //вроде не актуально
 
                     if (!Disciplines.ContainsKey(discipline)) continue;
                     //Изменить на трайпарс после дебага
+
+                    HashSet<int> set = new HashSet<int>();
+                    foreach (int ind in Disciplines[discipline].Exam.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
+                        set.Add(ind);
+                    foreach (int ind in Disciplines[discipline].Credit.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
+                        set.Add(ind);
+                    foreach (int ind in Disciplines[discipline].CreditWithRating.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
+                        set.Add(ind);
 
                     string[] semestrs = FindTwoCell(worksheet, "семестр");
                     var semester = 0;
@@ -189,40 +199,45 @@ namespace DisciplineWorkProgram.Models.Sections
                         continue;
                     }
 
-                    var details = new DisciplineDetails
+                    if (set.Contains(semester))
                     {
-                        Semester = semester.ToString(),
-                        Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
-                        Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
-                        Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лек$", true)).GetInt(),
-                        Lab = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лаб$", true)).GetInt(),
-                        Pr = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^пр$", true)).GetInt(),
-                        Ind = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^ср$", true)).GetInt(),
-                        Control = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
-                        Ze = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), @"^з\.е\.$", true)).GetInt()
-                    };
+                        var details = new DisciplineDetails
+                        {
+                            Semester = semester.ToString(),
+                            Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
+                            Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
+                            Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лек$", true)).GetInt(),
+                            Lab = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^лаб$", true)).GetInt(),
+                            Pr = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^пр$", true)).GetInt(),
+                            Ind = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^ср$", true)).GetInt(),
+                            Control = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[0]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
+                            Ze = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[0]), @"^з\.е\.$", true)).GetInt()
+                        };
 
-                    if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
-                        Disciplines[discipline].Details.Add(semester, details);
-                    //to do: заменить на поиск по странице.
-                    isGood = int.TryParse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value, out semester);
+                        if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
+                            Disciplines[discipline].Details.Add(semester, details);
+                    }
+                    
+                    isGood = int.TryParse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[1]).GetString()).Value, out semester);
                     if (!isGood) semester = ((cur + 1)) * 2 + 1;
-
-                    details = new DisciplineDetails
+                    if (set.Contains(semester))
                     {
-                        Semester = semester.ToString(),
-                        Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
-                        Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
-                        Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лек$", true)).GetInt(),
-                        Lab = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лаб$", true)).GetInt(),
-                        Pr = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^пр$", true)).GetInt(),
-                        Ind = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^ср$", true)).GetInt(),
-                        Control = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
-                        Ze = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), @"^з\.е\.$", true)).GetInt()
-                    };
+                        var details = new DisciplineDetails
+                        {
+                            Semester = semester.ToString(),
+                            Monitoring = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetString(),
+                            Contact = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[А|а]\\s*[К|к]\\s*[Т|т]", true)).GetInt(),
+                            Lec = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лек$", true)).GetInt(),
+                            Lab = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^лаб$", true)).GetInt(),
+                            Pr = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^пр$", true)).GetInt(),
+                            Ind = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^ср$", true)).GetInt(),
+                            Control = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(academChas[1]), "^[К|к]?\\s*[О|о]\\s*[Н|н]\\s*[Т|т]\\s*[Р|р]\\s*[О|о]\\s*[Л|л]", true)).GetInt(),
+                            Ze = row.Cell(FindColumnAnderCell(worksheet, worksheet.Cell(semestrs[1]), @"^з\.е\.$", true)).GetInt()
+                        };
 
-                    if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
-                        Disciplines[discipline].Details.Add(semester, details);
+                        if (!Disciplines[discipline].Details.ContainsKey(semester) && !details.IsHollow)
+                            Disciplines[discipline].Details.Add(semester, details);
+                    }
                 }
             }
         }

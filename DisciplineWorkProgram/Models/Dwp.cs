@@ -25,6 +25,7 @@ namespace DisciplineWorkProgram.Models
         //Должно обрабатывать только 1 дисциплину, чтобы "масштабировать" без доп. кода
         public void MakeDwp(string templatePath, string dwpDir, string discipline, Employee employes)
         {
+            
 
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
             var bookmarkMap = GetBookmarks(doc, "Autofill");
@@ -35,13 +36,15 @@ namespace DisciplineWorkProgram.Models
             WriteRequirements(bookmarkMap, discipline, doc);
             WriteCompetenciesTable(bookmarkMap, discipline, doc); //заполняет табличку компетенций
             WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
-            WritePracticleClassTable(bookmarkMap, discipline, doc);
+            if (dwpDir == "dwp/")
+                WritePracticleClassTable(bookmarkMap, discipline, doc);
             WriteSemesters(bookmarkMap, discipline, doc);
             WriteCompetencies(bookmarkMap, discipline, doc);//записываем компетенции в самом начале
             WriteYear(bookmarkMap, doc);
             // Не реализовано занесение данных по дисциплине
             WriteLaboriousnessTable(bookmarkMap, discipline, doc);
-            WriteLaboratiesClassTable(bookmarkMap, discipline, doc);
+            if (dwpDir == "dwp/")
+                WriteLaboratiesClassTable(bookmarkMap, discipline, doc);
 
             SaveDoc(doc, dwpDir, Section.Disciplines[discipline].Name);
             doc.Dispose();
@@ -191,7 +194,17 @@ namespace DisciplineWorkProgram.Models
                                 .First(elem => elem.Text.Contains("Autofill" + actualKey))
                                 .Text = employes.Employees[employes.Employees[Section.Disciplines[discipline].Props["Department"]]["institut"]]["FIO"];
                         continue;
-                        
+                    case "PositionOdimp":
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Проректор по образовательной деятельности и молодежной политике"]["position"];
+                        continue;
+                    case "PositionOdimpName":
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                                .Text = employes.Employees["Проректор по образовательной деятельности и молодежной политике"]["FIO"];
+                        continue;
+
                 }
             }
         }
