@@ -37,14 +37,13 @@ namespace DisciplineWorkProgram.Models
             WriteCompetenciesTable(bookmarkMap, discipline, doc); //заполняет табличку компетенций
             WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
             if (dwpDir == "dwp/")
-                WritePracticleClassTable(bookmarkMap, discipline, doc);
+                WritePracticleClassTable(bookmarkMap, discipline, doc); //блок
             WriteSemesters(bookmarkMap, discipline, doc);
             WriteCompetencies(bookmarkMap, discipline, doc);//записываем компетенции в самом начале
             WriteYear(bookmarkMap, doc);
-            // Не реализовано занесение данных по дисциплине
             WriteLaboriousnessTable(bookmarkMap, discipline, doc);
             if (dwpDir == "dwp/")
-                WriteLaboratiesClassTable(bookmarkMap, discipline, doc);
+                WriteLaboratiesClassTable(bookmarkMap, discipline, doc);//блок
 
             SaveDoc(doc, dwpDir, Section.Disciplines[discipline].Name);
             doc.Dispose();
