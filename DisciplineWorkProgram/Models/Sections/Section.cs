@@ -162,7 +162,7 @@ namespace DisciplineWorkProgram.Models.Sections
                 int count = 1;
                 foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell(FindColumn(worksheet, "№")).GetString(), out _))
                     .Concat(worksheet.RowsUsed().Where(row =>
-                        row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация")))
+                        row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация", "подготовка")))
                     )
                 {
 
@@ -181,6 +181,35 @@ namespace DisciplineWorkProgram.Models.Sections
                     foreach (int ind in Disciplines[discipline].CreditWithRating.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
                         set.Add(ind);
 
+                    if(discipline.Contains("Б3"))
+                    {
+                        switch (SectionDictionary["EducationLevel"])
+                        {
+                            case "Бакалавриат":
+                                {
+                                    set.Add(8);
+                                    break;
+                                }
+                            case "Магистратура":
+                                {
+                                    set.Add(4);
+                                    break;
+                                }
+                            case "Аспирантура":
+                                {
+                                    set.Add(6);
+                                    break;
+                                }
+                            case "Специалитет":
+                                {
+                                    set.Add(11);
+                                    break;
+                                }
+
+                            default:
+                                break;
+                        }
+                    }
                     string[] semestrs = FindTwoCell(worksheet, "семестр");
                     var semester = 0;
                     bool isGood = int.TryParse(RegexPatterns.DigitInString.Match(worksheet.Cell(semestrs[0]).GetString()).Value, out semester);

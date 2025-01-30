@@ -40,7 +40,8 @@ namespace DisciplineWorkProgram.Models
                 WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
             if (dwpDir == "dwp/")
                 WritePracticleClassTable(bookmarkMap, discipline, doc); //блок
-            WriteSemesters(bookmarkMap, discipline, doc);
+            if (dwpDir != "vkr/")
+                WriteSemesters(bookmarkMap, discipline, doc);
             WriteCompetencies(bookmarkMap, discipline, doc);//записываем компетенции в самом начале
             WriteYear(bookmarkMap, doc);
             // Не реализовано занесение данных по дисциплине
