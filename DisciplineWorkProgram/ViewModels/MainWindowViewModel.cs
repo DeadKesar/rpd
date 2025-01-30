@@ -31,6 +31,8 @@ namespace DisciplineWorkProgram.ViewModels
         public const string fosDir = "fos/";
         public string PRACTemplatePath = Directory.GetCurrentDirectory() + "\\PRAC_TemplateBookmarks.docx";
         public const string pracDir = "prac/";
+        public string VKRTemplatePath = Directory.GetCurrentDirectory() + "\\VKR_TemplateBookmarks.docx";
+        public const string vkrDir = "vkr/";
         public bool isHasDate = false;
         public string PathToDolz = Directory.GetCurrentDirectory() + "\\dolznosti.xlsx";
         public Employee employes = new Employee(Directory.GetCurrentDirectory() + "\\dolznosti.xlsx");
@@ -131,12 +133,18 @@ namespace DisciplineWorkProgram.ViewModels
             //		.MakeDwp(TemplatePath, DwpDir, section.Disciplines.First().Key);
             foreach (var discipline in section.GetCheckedDisciplinesNames)
             {
-             if (discipline.Contains("Б2") 
-                        ||section.Disciplines[discipline].Props["Name"].ToLower().Contains("практика") 
-                        || section.Disciplines[discipline].Props["Name"].ToLower().Contains("аттестация"))
+                    if (discipline.Contains("Б2") 
+                        //||section.Disciplines[discipline].Props["Name"].ToLower().Contains("практика") 
+                        //|| section.Disciplines[discipline].Props["Name"].ToLower().Contains("аттестация"))
+                        )
                     {
                         TemplatePath = PRACTemplatePath;
                         dir = pracDir;
+                    }
+                    else if (discipline.Contains("Б3"))
+                    {
+                        TemplatePath = VKRTemplatePath;
+                        dir = vkrDir;
                     }
                     else
                     {
@@ -155,11 +163,17 @@ namespace DisciplineWorkProgram.ViewModels
 				foreach (var discipline in section.GetCheckedDisciplinesNames)
 				{
                     if (discipline.Contains("Б2") 
-                        ||section.Disciplines[discipline].Props["Name"].ToLower().Contains("практика") 
-                        || section.Disciplines[discipline].Props["Name"].ToLower().Contains("аттестация"))
+                        //||section.Disciplines[discipline].Props["Name"].ToLower().Contains("практика") 
+                        //|| section.Disciplines[discipline].Props["Name"].ToLower().Contains("аттестация"))
+                        )
                     {
                         TemplatePath = PRACTemplatePath;
                         dir = pracDir;
+                    }
+                    else if (discipline.Contains("Б3"))
+                    {
+                        TemplatePath = VKRTemplatePath;
+                        dir = vkrDir;
                     }
                     else
                     {

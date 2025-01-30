@@ -34,15 +34,20 @@ namespace DisciplineWorkProgram.Models
             WriteDisciplineData(bookmarkMap, discipline, doc);
             WriteEmploesData(bookmarkMap, discipline, doc, employes);
             WriteRequirements(bookmarkMap, discipline, doc);
-            WriteCompetenciesTable(bookmarkMap, discipline, doc); //заполняет табличку компетенций
-            WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
+            if (dwpDir != "vkr/")
+                WriteCompetenciesTable(bookmarkMap, discipline, doc); //заполняет табличку компетенций
+            if (dwpDir != "vkr/")
+                WriteDisciplinePartitionTable(bookmarkMap, discipline, doc);
             if (dwpDir == "dwp/")
                 WritePracticleClassTable(bookmarkMap, discipline, doc);
             WriteSemesters(bookmarkMap, discipline, doc);
             WriteCompetencies(bookmarkMap, discipline, doc);//записываем компетенции в самом начале
             WriteYear(bookmarkMap, doc);
             // Не реализовано занесение данных по дисциплине
-            WriteLaboriousnessTable(bookmarkMap, discipline, doc);
+            if (dwpDir != "vkr/")
+                WriteLaboriousnessTable(bookmarkMap, discipline, doc);
+            if (dwpDir == "vkr/")
+                WriteLabVkrTable(bookmarkMap, discipline, doc);
             if (dwpDir == "dwp/")
                 WriteLaboratiesClassTable(bookmarkMap, discipline, doc);
 
@@ -520,6 +525,114 @@ namespace DisciplineWorkProgram.Models
 
                 foreach (var row in rows.Skip(2))
                     row.AppendChild(GetTableCellByString(atAll[i++]));
+            }
+        }
+        private void WriteLabVkrTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
+        {
+            if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
+                return;
+
+            var rows = FindElementsByBookmark<Table>(bookmarkMap["LabVkrTable1"], 2, doc)
+                .First()
+                .Elements<TableRow>()
+                .ToArray();
+
+
+            //Добавляет в первую строку ячейку, которая далее будет сливаться с последующими
+            rows.First().AppendChild(
+                new TableCell(
+                    new TableCellProperties(
+                        new HorizontalMerge { Val = MergedCellValues.Restart }),
+                    new Paragraph(
+                        new Run(
+                            new Text("Трудоемкость, академических часов")))));
+
+            foreach (var (semester, details) in Section.Disciplines[discipline].Details)
+            {
+                var i = 0;
+
+                rows.First().AppendChild(new TableCell(
+                    new TableCellProperties(
+                        new HorizontalMerge { Val = MergedCellValues.Continue }),
+                    new Paragraph()));
+                rows.Skip(1).First().AppendChild(GetTableCellByString($"{semester} семестр"));
+
+                foreach (var row in rows.Skip(2))
+                {
+                    if (i == 2)
+                    {
+                        row.AppendChild(GetTableCellByString(details[6]));
+                        continue;
+                    }
+                    if (i == 3)
+                    {
+                        row.AppendChild(GetTableCellByString("Защита ВКР"));
+                        continue;
+                    }
+                    row.AppendChild(GetTableCellByString(details[i++]));
+                }
+            }
+
+            WriteAtAllColumn();
+
+
+            void WriteAtAllColumn()
+            {
+                var i = 0;
+                var atAll = new DisciplineDetails();
+
+                if (Section.Disciplines[discipline].Details.Count == 0)
+                {
+                    atAll = new DisciplineDetails
+                    {
+                        Semester = "0",
+                        Monitoring = " , , , , , , , , ",
+                        Contact = 0,
+                        Lec = 0,
+                        Lab = 0,
+                        Pr = 0,
+                        Ind = 0,
+                        Control = 0,
+                        Ze = 0
+                    };
+                }
+                else
+                {
+                    atAll = new DisciplineDetails
+                    {
+                        Semester = Section.Disciplines[discipline].Details.Values.Select(details => details.Semester)
+                            .Aggregate((current, next) => current + ", " + next),
+                        Monitoring = Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring)
+                            .Aggregate((current, next) => current + ", " + next),
+                        Contact = Section.Disciplines[discipline].Details.Values.Sum(details => details.Contact),
+                        Lec = Section.Disciplines[discipline].Details.Values.Sum(details => details.Lec),
+                        Lab = Section.Disciplines[discipline].Details.Values.Sum(details => details.Lab),
+                        Pr = Section.Disciplines[discipline].Details.Values.Sum(details => details.Pr),
+                        Ind = Section.Disciplines[discipline].Details.Values.Sum(details => details.Ind),
+                        Control = Section.Disciplines[discipline].Details.Values.Sum(details => details.Control),
+                        Ze = Section.Disciplines[discipline].Details.Values.Sum(details => details.Ze)
+                    };
+                }
+                rows.First().AppendChild(new TableCell(
+                    new TableCellProperties(
+                        new HorizontalMerge { Val = MergedCellValues.Continue }),
+                    new Paragraph()));
+                rows.Skip(1).First().AppendChild(GetTableCellByString("всего"));
+
+                foreach (var row in rows.Skip(2))
+                {
+                    if (i == 2)
+                    {
+                        row.AppendChild(GetTableCellByString(atAll[6]));
+                        continue;
+                    }
+                    if (i == 3)
+                    {
+                        row.AppendChild(GetTableCellByString("Защита ВКР"));
+                        continue;
+                    }
+                    row.AppendChild(GetTableCellByString(atAll[i++]));
+                }
             }
         }
         //AutofillRequirements1
