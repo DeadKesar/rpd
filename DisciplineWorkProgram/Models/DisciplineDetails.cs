@@ -33,6 +33,7 @@
         /// 6 - Самост. раб.,
         /// 7 - заглушка,
         /// 8 - Вид контроля
+        /// 9 - семестр
         /// </summary>
         /// <param name="i"></param>
         public string this[int i] => i switch
