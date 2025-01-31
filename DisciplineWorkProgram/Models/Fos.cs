@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml;
 using DisciplineWorkProgram.Models.Sections.Helpers;
 using System.Text;
 using System.Text.RegularExpressions;
+using DynamicData.Kernel;
 
 namespace DisciplineWorkProgram.Models
 {
@@ -29,6 +30,7 @@ namespace DisciplineWorkProgram.Models
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
             var bookmarkMap = GetBookmarks(doc, "Autofill");
 
+            
             WriteSectionData(bookmarkMap, doc);
             WriteDisciplineData(bookmarkMap, discipline, doc);
             WriteEmploesData(bookmarkMap, discipline, doc, employes);
@@ -42,7 +44,7 @@ namespace DisciplineWorkProgram.Models
             // Не реализовано занесение данных по дисциплине
             //WriteLaboriousnessTable(bookmarkMap, discipline, doc);
             //WriteLaboratiesClassTable(bookmarkMap, discipline, doc);
-
+            CheckExam(bookmarkMap, discipline, doc);
             SaveDoc(doc, fosDir, Section.Disciplines[discipline].Name);
             doc.Dispose();
         }
@@ -64,6 +66,62 @@ namespace DisciplineWorkProgram.Models
                 {
                     Console.WriteLine(key);
                     Environment.Exit(1);
+                }
+            }
+        }
+
+        private void CheckExam(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
+        {
+            HashSet<string> set = new HashSet<string>();
+            foreach (var mon in Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring))
+            {
+                foreach (var item in mon.Split(' '))
+                {
+                    if (item == "За")
+                    {
+                        set.Add("Зачёт");
+                    }
+                    if (item == "Эк")
+                    {
+
+                        set.Add("Экзамен");
+                    }
+                    if (item == "ЗаО")
+                    {
+                        set.Add("Зачёт с оценкой");
+                    }
+                    if (item == "КР")
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            if (!set.Contains("Экзамен") && !set.Contains("Зачёт с оценкой"))
+            {
+
+                var body = doc.MainDocumentPart.Document.Body;
+
+                // Находим начало и конец закладки
+                var bookmarkStart = body.Descendants<BookmarkStart>().FirstOrDefault(b => b.Name == "AutofillExaming1");
+                var bookmarkEnd = body.Descendants<BookmarkEnd>().FirstOrDefault(be => be.Id == bookmarkStart?.Id);
+
+                if (bookmarkStart == null || bookmarkEnd == null)
+                {
+                    throw new System.Exception($"Закладка AutofillExaming1 не найдена или не имеет конца.");
+                }
+
+                // Собираем все элементы между BookmarkStart и BookmarkEnd
+                var elementsToRemove = body.Descendants()
+                    .SkipWhile(e => e != bookmarkStart) // Пропустить элементы до начала закладки
+                    .Skip(1) // Пропустить сам BookmarkStart
+                    .TakeWhile(e => e != bookmarkEnd) // Взять все элементы до BookmarkEnd
+                    .ToList();
+
+                // Удаляем найденные элементы
+                foreach (var element in elementsToRemove)
+                {
+                    element.Remove();
                 }
             }
         }
@@ -134,30 +192,22 @@ namespace DisciplineWorkProgram.Models
                 if (actualKey == "Monitoring")
                 {
                     StringBuilder temp = new StringBuilder();
-
+                    HashSet<string> set = new HashSet<string>();
                     foreach (var mon in Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring)) {
                         foreach (var item in mon.Split(' '))
                         {
                             if (item == "За")
                             {
-                                if (temp.Length > 0)
-                                    temp.Append(", ");
-
-                                temp.Append("Зачёта");
+                                set.Add("Зачёта");
                             }
                             if (item == "Эк")
                             {
-                                if (temp.Length > 0)
-                                    temp.Append(", ");
-
-                                temp.Append("Экзамена");
+ 
+                                set.Add("Экзамена");
                             }
                             if (item == "ЗаО")
                             {
-                                if (temp.Length > 0)
-                                    temp.Append(", ");
-
-                                temp.Append("Зачёта с оценкой");
+                                set.Add("Зачёта с оценкой");
                             }
                             if (item == "КР")
                             {
@@ -165,6 +215,14 @@ namespace DisciplineWorkProgram.Models
                             }
                         }
                     }
+                    foreach(var mon in set)
+                    {
+                        if (temp.Length > 0)
+                            temp.Append(", ");
+
+                        temp.Append(mon);
+                    }
+
                     FindElementsByBookmark<Text>(bookmark, 1, doc)
                         .First(elem => elem.Text.Contains("Autofill" + actualKey))
                         .Text = temp.ToString();
@@ -173,38 +231,36 @@ namespace DisciplineWorkProgram.Models
                 if (actualKey == "MonitoringU")
                 {
                     StringBuilder temp = new StringBuilder();
-
+                    HashSet<string> set = new HashSet<string>();
                     foreach (var mon in Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring))
                     {
                         foreach (var item in mon.Split(' '))
                         {
                             if (item == "За")
                             {
-                                if (temp.Length > 0)
-                                    temp.Append(", ");
-
-                                temp.Append("Зачёту");
+                                set.Add("Зачёту");
                             }
                             if (item == "Эк")
                             {
-                                if (temp.Length > 0)
-                                    temp.Append(", ");
 
-                                temp.Append("Экзамену");
+                                set.Add("Экзамену");
                             }
                             if (item == "ЗаО")
                             {
-                                if (temp.Length > 0)
-                                    temp.Append(", ");
-
-                                temp.Append("Зачёту с оценкой");
+                                set.Add("Зачёту с оценкой");
                             }
                             if (item == "КР")
                             {
                                 continue;
                             }
-
                         }
+                    }
+                    foreach (var mon in set)
+                    {
+                        if (temp.Length > 0)
+                            temp.Append(", ");
+
+                        temp.Append(mon);
                     }
 
                     FindElementsByBookmark<Text>(bookmark, 1, doc)
