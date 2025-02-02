@@ -25,10 +25,11 @@ namespace DisciplineWorkProgram.Models
         //Должно обрабатывать только 1 дисциплину, чтобы "масштабировать" без доп. кода
         public void MakeDwp(string templatePath, string dwpDir, string discipline, Employee employes)
         {
-            
+
 
             using var doc = WordprocessingDocument.CreateFromTemplate(templatePath, true);
             var bookmarkMap = GetBookmarks(doc, "Autofill");
+            //bool isSafe = false;
 
             WriteSectionData(bookmarkMap, doc);
             WriteDisciplineData(bookmarkMap, discipline, doc);
@@ -51,9 +52,12 @@ namespace DisciplineWorkProgram.Models
                 WriteLabVkrTable(bookmarkMap, discipline, doc);
             if (dwpDir == "dwp/")
                 WriteLaboratiesClassTable(bookmarkMap, discipline, doc);//блок
+            if (dwpDir == "dwp/")
+                CheckKurs(bookmarkMap, discipline, doc, templatePath, dwpDir, employes);
 
             SaveDoc(doc, dwpDir, Section.Disciplines[discipline].Name);
             doc.Dispose();
+
         }
 
         private void WriteSectionData(IDictionary<string, BookmarkStart> bookmarkMap, WordprocessingDocument doc)
@@ -157,34 +161,34 @@ namespace DisciplineWorkProgram.Models
                         continue;
 
                     case "PositionUmu":
-                            FindElementsByBookmark<Text>(bookmark, 1, doc)
-                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                                .Text = employes.Employees["Начальник учебно-методического управления ДСиРОД"]["position"];
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Начальник учебно-методического управления ДСиРОД"]["position"];
                         continue;
                     case "PositionUmuName":
-                            FindElementsByBookmark<Text>(bookmark, 1, doc)
-                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                                .Text = employes.Employees["Начальник учебно-методического управления ДСиРОД"]["FIO"];
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Начальник учебно-методического управления ДСиРОД"]["FIO"];
                         continue;
                     case "PositionBib":
-                            FindElementsByBookmark<Text>(bookmark, 1, doc)
-                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                                .Text = employes.Employees["Директор научно-технической библиотеки"]["position"];
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Директор научно-технической библиотеки"]["position"];
                         continue;
                     case "PositionBibName":
-                            FindElementsByBookmark<Text>(bookmark, 1, doc)
-                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                                .Text = employes.Employees["Директор научно-технической библиотеки"]["FIO"];
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Директор научно-технической библиотеки"]["FIO"];
                         continue;
                     case "PositionUitp":
-                            FindElementsByBookmark<Text>(bookmark, 1, doc)
-                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                                .Text = employes.Employees["Начальник управления информационно-технической поддержки ДЦТ"]["position"];
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Начальник управления информационно-технической поддержки ДЦТ"]["position"];
                         continue;
                     case "PositionUitpName":
-                            FindElementsByBookmark<Text>(bookmark, 1, doc)
-                                .First(elem => elem.Text.Contains("Autofill" + actualKey))
-                                .Text = employes.Employees["Начальник управления информационно-технической поддержки ДЦТ"]["FIO"];
+                        FindElementsByBookmark<Text>(bookmark, 1, doc)
+                            .First(elem => elem.Text.Contains("Autofill" + actualKey))
+                            .Text = employes.Employees["Начальник управления информационно-технической поддержки ДЦТ"]["FIO"];
                         continue;
                     case "PositionInst":
                         if (Section.Disciplines[discipline].Props["Department"] == "" || Section.Disciplines[discipline].Props["Department"] == "Управление по организации проектного обучения")
@@ -215,7 +219,7 @@ namespace DisciplineWorkProgram.Models
             }
         }
 
-            private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
+        private void WriteCompetenciesTable(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc)
         {
             if (!Section.Disciplines.ContainsKey(discipline) || !Section.DisciplineCompetencies.ContainsKey(Section.Disciplines[discipline].Name))
                 return;
@@ -818,9 +822,83 @@ namespace DisciplineWorkProgram.Models
             bookmarkElement2.Remove();
         }
 
-        //часть, формируемая участниками образовательных отношений
-        //Обязательная часть
-        //AutofillPartType1
+        private void CheckKurs(IDictionary<string, BookmarkStart> bookmarkMap, string discipline, WordprocessingDocument doc, 
+            string templatePath, string dwpDir, Employee employes)
+        {
+            //isSave = false;
+            HashSet<string> set = new HashSet<string>();
+            var temp = Section.Disciplines.Where(x => x.Value.Name.Contains(Section.Disciplines[discipline].Name)
+                    && x.Value.Name.Contains("Проект по", StringComparison.OrdinalIgnoreCase)).
+                    Select(x => x.Key).FirstOrDefault();
+
+
+            foreach (var mon in Section.Disciplines[discipline].Details.Values.Select(details => details.Monitoring))
+            {
+                foreach (var item in mon.Split(' '))
+                {
+
+                    if (item == "КР")
+                    {
+                        set.Add("КР");
+                    }
+                    if (item == "КП")
+                    {
+                        set.Add("КП");
+                    }
+                }
+            }
+            if (temp != null)
+            {
+                foreach (var mon in Section.Disciplines[temp].Details.Values.Select(details => details.Monitoring))
+                {
+                    foreach (var item in mon.Split(' '))
+                    {
+
+                        if (item == "КР")
+                        {
+                            set.Add("КР");
+                        }
+                        if (item == "КП")
+                        {
+                            set.Add("КП");
+                        }
+                    }
+                }
+            }
+
+            if (set.Contains("КР"))
+            {
+                FindElementsByBookmark<Text>(bookmarkMap["Kurs1"], 1, doc)
+                .First(elem => elem.Text.Contains("AutofillKurs"))
+                .Text = "учебным планом предусмотренна курсовая работа. Пожалуйста заполните этот пункт.";
+            }
+            else if (set.Contains("КП"))
+            {
+                FindElementsByBookmark<Text>(bookmarkMap["Kurs1"], 1, doc)
+                .First(elem => elem.Text.Contains("AutofillKurs"))
+                .Text = "учебным планом предусмотрен курсовой проект. Пожалуйста заполните этот пункт.";
+            }
+            else
+            {
+                FindElementsByBookmark<Text>(bookmarkMap["Kurs1"], 1, doc)
+                .First(elem => elem.Text.Contains("AutofillKurs"))
+                .Text = "учебным планом курсовой проект не предусмотрен.";
+            }
+            /*
+            if(set.Count >0)
+            {
+                var temp = Section.Disciplines.Where(x => x.Value.Name.Contains(Section.Disciplines[discipline].Name) 
+                    && x.Value.Name.Contains("Проект", StringComparison.OrdinalIgnoreCase)).
+                    Select(x => x.Value.Name).FirstOrDefault();
+                isSave = true;
+                SaveDoc(doc, dwpDir, Section.Disciplines[discipline].Name);
+                doc.Dispose();
+                MakeDwp(templatePath, dwpDir, temp, employes);
+            }*/
+
+
+        } 
+           
 
     }
 }

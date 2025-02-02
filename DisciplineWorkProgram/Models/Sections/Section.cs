@@ -162,7 +162,7 @@ namespace DisciplineWorkProgram.Models.Sections
                 int count = 1;
                 foreach (var row in worksheet.RowsUsed().Where(row => int.TryParse(row.Cell(FindColumn(worksheet, "№")).GetString(), out _))
                     .Concat(worksheet.RowsUsed().Where(row =>
-                        row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация", "подготовка")))
+                        row.Cell(FindColumn(worksheet, "наименование")).GetString().ToLower().ContainsAny("практика", "аттестация", "квалифик")))
                     )
                 {
 
@@ -180,8 +180,12 @@ namespace DisciplineWorkProgram.Models.Sections
                         set.Add(ind);
                     foreach (int ind in Disciplines[discipline].CreditWithRating.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
                         set.Add(ind);
+                    foreach (int ind in Disciplines[discipline].Kr.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
+                        set.Add(ind);
+                    foreach (int ind in Disciplines[discipline].Kp.ToString().Select(ch => int.Parse(ch.ToString())).ToArray())
+                        set.Add(ind);
 
-                    if(discipline.Contains("Б3"))
+                    if (discipline.Contains("Б3"))
                     {
                         switch (SectionDictionary["EducationLevel"])
                         {
